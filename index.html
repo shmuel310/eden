@@ -3,106 +3,124 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GAN EDEN: Cosmic Mountain Sanctuary (PBR & HDR Edition)</title>
+  <title>GAN EDEN: Next-Gen PBR & Atmospheric Sanctuary</title>
   <style>
     :root {
-      --bg-glass: rgba(10, 16, 22, 0.78);
-      --border-gold: rgba(212, 175, 55, 0.65);
-      --gold-bright: #f3cf7a;
-      --text-main: #f0eee9;
-      --text-muted: #a3b1bf;
-      --accent-life: #55efc4;
-      --accent-order: #74b9ff;
-      --accent-warn: #ff5252;
+      --bg-hud: rgba(8, 12, 16, 0.72);
+      --border-gold: rgba(218, 180, 88, 0.55);
+      --gold-accent: #f5d17e;
+      --text-primary: #f4f3ef;
+      --text-secondary: #9aa8b8;
+      --vitality-color: #2ed573;
+      --order-color: #1e90ff;
+      --danger-color: #ff4757;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body { overflow: hidden; background: #05080c; font-family: "Noto Serif TC", "Georgia", serif; color: var(--text-main); }
+    body { overflow: hidden; background: #030508; font-family: "Noto Serif TC", "Optima", "Georgia", serif; color: var(--text-primary); }
     canvas { display: block; width: 100vw; height: 100vh; }
+
+    /* Cinematic Letterbox Bars */
+    .letterbox {
+      position: fixed; left: 0; width: 100%; height: 28px;
+      background: #000; z-index: 5; pointer-events: none;
+    }
+    .letterbox.top { top: 0; }
+    .letterbox.bottom { bottom: 0; }
 
     /* HUD */
     #hud {
-      position: fixed; inset: 0; pointer-events: none;
+      position: fixed; inset: 28px 0; pointer-events: none;
       display: flex; flex-direction: column; justify-content: space-between;
-      padding: 24px 32px; z-index: 10;
+      padding: 22px 36px; z-index: 10;
     }
-    .top-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-    .panel {
-      background: var(--bg-glass);
+    .top-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+    .glass-panel {
+      background: var(--bg-hud);
       border: 1px solid var(--border-gold);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(212, 175, 55, 0.08);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       padding: 16px 22px; border-radius: 6px;
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       pointer-events: auto;
     }
-    .panel h1 {
-      font-size: 1.2rem; color: var(--gold-bright); letter-spacing: 2px;
-      margin-bottom: 6px; font-weight: 600; text-shadow: 0 0 10px rgba(243, 207, 122, 0.3);
+    .glass-panel h1 {
+      font-size: 1.15rem; color: var(--gold-accent); letter-spacing: 2.5px;
+      margin-bottom: 6px; font-weight: 600; text-transform: uppercase;
     }
-    .panel p { font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; }
+    .glass-panel p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
 
-    /* Stats */
-    .stats-grid { display: grid; grid-template-columns: 1fr; gap: 12px; min-width: 310px; }
-    .stat-row { display: flex; flex-direction: column; gap: 5px; }
-    .stat-label { display: flex; justify-content: space-between; font-size: 0.82rem; letter-spacing: 0.5px; }
-    .bar-bg { width: 100%; height: 7px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
-    .bar-fill { height: 100%; transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
-    #bar-hayyim { background: linear-gradient(90deg, #00b894, #55efc4); box-shadow: 0 0 8px #55efc4; width: 100%; }
-    #bar-shamar { background: linear-gradient(90deg, #0984e3, #74b9ff); box-shadow: 0 0 8px #74b9ff; width: 0%; }
+    /* Status Bars */
+    .stats-box { min-width: 320px; display: flex; flex-direction: column; gap: 12px; }
+    .stat-item { display: flex; flex-direction: column; gap: 5px; }
+    .stat-header { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; }
+    .track { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+    .fill { height: 100%; transition: width 0.25s ease-out; }
+    #fill-hayyim { background: linear-gradient(90deg, #10ac84, #2ed573); box-shadow: 0 0 10px #2ed573; width: 100%; }
+    #fill-shamar { background: linear-gradient(90deg, #2e86de, #54a0ff); box-shadow: 0 0 10px #54a0ff; width: 0%; }
 
-    /* Center Reticle & Prompt */
-    #center-ui {
+    .gfx-toggle {
+      margin-top: 6px; display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.75rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;
+    }
+    .gfx-btn {
+      background: rgba(245, 209, 126, 0.15); border: 1px solid var(--border-gold);
+      color: var(--gold-accent); padding: 3px 10px; border-radius: 3px; cursor: pointer; font-size: 0.72rem;
+    }
+    .gfx-btn:hover { background: rgba(245, 209, 126, 0.3); }
+
+    /* Reticle & Interaction Prompt */
+    #center-hud {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      display: flex; flex-direction: column; align-items: center; gap: 16px;
-      pointer-events: none;
+      display: flex; flex-direction: column; align-items: center; gap: 18px; pointer-events: none;
     }
     #reticle {
-      width: 5px; height: 5px; border-radius: 50%;
+      width: 6px; height: 6px; border-radius: 50%;
       background: rgba(255, 255, 255, 0.9);
-      box-shadow: 0 0 6px rgba(243, 207, 122, 0.9);
+      box-shadow: 0 0 8px rgba(245, 209, 126, 0.95);
+      transition: transform 0.2s ease;
     }
-    #interaction-prompt {
-      background: var(--bg-glass); border: 1px solid var(--gold-bright);
-      padding: 10px 20px; border-radius: 6px; font-size: 0.92rem;
+    #prompt-box {
+      background: var(--bg-hud); border: 1px solid var(--gold-accent);
+      padding: 10px 22px; border-radius: 6px; font-size: 0.9rem;
       display: none; text-align: center; white-space: nowrap;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.85);
     }
-    .key-hint {
-      display: inline-block; background: var(--gold-bright); color: #05080c;
-      padding: 2px 7px; border-radius: 3px; font-weight: bold; margin: 0 5px;
+    .k-badge {
+      display: inline-block; background: var(--gold-accent); color: #05080c;
+      padding: 2px 7px; border-radius: 3px; font-weight: 700; margin: 0 4px;
     }
 
-    /* Bottom Exegetical Log */
-    .bottom-bar { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
-    #exegetical-log { max-width: 660px; min-height: 92px; }
-    #log-title { font-size: 0.9rem; color: var(--gold-bright); font-weight: bold; margin-bottom: 5px; letter-spacing: 0.5px; }
-    #log-body { font-size: 0.85rem; color: var(--text-main); line-height: 1.55; }
-    #log-ref { font-size: 0.76rem; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+    /* Bottom Exegesis & Controls */
+    .bottom-bar { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+    #exegesis-panel { max-width: 680px; min-height: 96px; }
+    #ex-title { font-size: 0.88rem; color: var(--gold-accent); font-weight: bold; margin-bottom: 5px; letter-spacing: 0.5px; }
+    #ex-body { font-size: 0.84rem; color: var(--text-primary); line-height: 1.55; }
+    #ex-ref { font-size: 0.74rem; color: var(--text-secondary); margin-top: 6px; font-style: italic; }
 
-    .controls-list { font-size: 0.8rem; color: var(--text-muted); line-height: 1.7; }
+    .controls-panel { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.7; }
 
-    /* Overlay Screen */
+    /* Overlay Modal */
     #overlay {
-      position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(14, 24, 34, 0.88), rgba(4, 7, 11, 0.96));
+      position: fixed; inset: 0;
+      background: radial-gradient(circle at center, rgba(10, 18, 26, 0.85), rgba(2, 4, 6, 0.97));
       display: flex; flex-direction: column; justify-content: center; align-items: center;
-      z-index: 100; padding: 30px; text-align: center; backdrop-filter: blur(8px);
+      z-index: 100; padding: 30px; text-align: center; backdrop-filter: blur(12px);
     }
-    .overlay-box {
-      max-width: 680px; border: 1px solid var(--border-gold);
-      background: rgba(12, 20, 28, 0.92); padding: 36px 40px; border-radius: 8px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.85), 0 0 40px rgba(212, 175, 55, 0.12);
+    .modal-card {
+      max-width: 700px; border: 1px solid var(--border-gold);
+      background: rgba(10, 16, 22, 0.94); padding: 38px 44px; border-radius: 8px;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.9), 0 0 50px rgba(218, 180, 88, 0.12);
     }
-    .overlay-box h2 { color: var(--gold-bright); font-size: 1.75rem; margin-bottom: 16px; letter-spacing: 1.5px; }
-    .overlay-box p { font-size: 0.94rem; line-height: 1.7; color: var(--text-main); margin-bottom: 18px; text-align: left; }
-    .btn {
-      background: linear-gradient(135deg, #d4af37, #f3cf7a); color: #080c11; border: none;
-      padding: 12px 32px; font-size: 1rem; font-weight: bold; letter-spacing: 1px;
-      cursor: pointer; border-radius: 4px; font-family: inherit; margin-top: 12px;
-      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); transition: transform 0.15s ease, box-shadow 0.15s ease;
+    .modal-card h2 { color: var(--gold-accent); font-size: 1.75rem; margin-bottom: 16px; letter-spacing: 2px; }
+    .modal-card p { font-size: 0.92rem; line-height: 1.7; color: var(--text-primary); margin-bottom: 16px; text-align: left; }
+    .primary-btn {
+      background: linear-gradient(135deg, #c59b27, #f5d17e); color: #05080c; border: none;
+      padding: 13px 34px; font-size: 0.98rem; font-weight: bold; letter-spacing: 1.2px;
+      cursor: pointer; border-radius: 4px; font-family: inherit; margin-top: 10px;
+      box-shadow: 0 6px 20px rgba(218, 180, 88, 0.4); transition: all 0.2s ease;
     }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(243, 207, 122, 0.65); }
+    .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245, 209, 126, 0.65); }
   </style>
 
-  <!-- ES Module Import Map for Three.js & Post-Processing -->
   <script type="importmap">
     {
       "imports": {
@@ -114,66 +132,73 @@
 </head>
 <body>
 
-  <!-- Overlay Screen -->
+  <div class="letterbox top"></div>
+  <div class="letterbox bottom"></div>
+
+  <!-- Start / Exile Modal -->
   <div id="overlay">
-    <div class="overlay-box" id="overlay-content">
-      <h2>גַּן־עֵדֶן | 伊甸聖所：宇宙高山聖殿</h2>
+    <div class="modal-card" id="modal-content">
+      <h2>גַּן־עֵדֶן | 伊甸聖所：次世代光學渲染版</h2>
       <p>
-        <strong>視覺與空間神學架構（PBR Sacred Cosmology）：</strong><br>
-        根據《創世記》2–3 章與古近東聖殿文獻，伊甸是天與地重疊的「宇宙高山（Cosmic High Place）」。霧氣（<i>ʾēd</i>）從地上升騰，單一活水源頭從聖所高處湧出，分為四道河（比遜、基訓、底格里斯、幼發拉底）流向地極四方，哈腓拉地遍布精金、珍珠（Bdellium）與紅瑪瑙（Carnelian）。
+        <strong>次世代渲染管線（RAGE-Inspired PBR Pipeline）：</strong><br>
+        本場景採用即時預過濾環境光探針（PMREM IBL）、螢幕空間環境光遮蔽（SSAO）、6階分形布朗運動（FBM）微地形雕刻、焦散流體著色器（Caustics Gerstner Water）、體積上帝光（Volumetric God-Rays）以及 30,000 株 GPU 次表面散射風場植被。
       </p>
       <p>
-        <strong>祭司職任（<i>ʿābad</i> & <i>šāmar</i>）：</strong><br>
-        你受命在聖所森林中執行事奉（<i>ʿābad</i>）與看守（<i>šāmar</i>）。你必須定期前往園子中央如金燈台般發光的「生命樹」領受果子以更新必死的生命，並拒絕僭越「知善惡樹」的道德定義主權。
+        <strong>創世記 2–3 章空間神學（Cosmic Mountain Sanctuary）：</strong><br>
+        伊甸是天與地交匯的高山至聖所。霧氣（<i>ʾēd</i>）從地上騰，單一河源湧出並分為四道（比遜、基訓、底格里斯、幼發拉底）滋潤四方。你受託執行祭司的 <strong>ʿābad（事奉）</strong> 與 <strong>šāmar（看守）</strong>，仰賴中央如七枝金燈台的「生命樹」更新必死生命，並尊崇神對「知善惡樹」的道德定義主權。
       </p>
-      <button class="btn" id="start-btn">進入聖所 (鎖定視角與啟動渲染)</button>
+      <button class="primary-btn" id="start-btn">啟動次世代聖所渲染 (鎖定視角)</button>
     </div>
   </div>
 
   <!-- HUD -->
   <div id="hud">
     <div class="top-bar">
-      <div class="panel">
+      <div class="glass-panel">
         <h1>גַּן־עֵדֶן GAN EDEN</h1>
-        <p id="location-status">當前區域：中央至聖所高台 (Holy of Holies)</p>
-        <p id="companion-status" style="margin-top:4px; color:var(--gold-bright);">狀態：那人單獨 (lōʾ-ṭôb הֱיוֹת הָאָדָם לְבַדּוֹ)</p>
+        <p id="loc-text">當前區域：中央至聖所高台 (Holy of Holies Summit)</p>
+        <p id="comp-text" style="margin-top:5px; color:var(--gold-accent);">狀態：那人單獨 (lōʾ-ṭôb הֱיוֹת הָאָדָם לְבַדּוֹ)</p>
       </div>
 
-      <div class="panel stats-grid">
-        <div class="stat-row">
-          <div class="stat-label">
+      <div class="glass-panel stats-box">
+        <div class="stat-item">
+          <div class="stat-header">
             <span>חַיִּים 生命活力 (Hayyim / Vitality)</span>
-            <span id="val-hayyim">100%</span>
+            <span id="txt-hayyim">100%</span>
           </div>
-          <div class="bar-bg"><div class="bar-fill" id="bar-hayyim"></div></div>
+          <div class="track"><div class="fill" id="fill-hayyim"></div></div>
         </div>
-        <div class="stat-row">
-          <div class="stat-label">
+        <div class="stat-item">
+          <div class="stat-header">
             <span>עָבַד וְשָׁמַר 聖所看守進度 (Abad & Shamar)</span>
-            <span id="val-shamar">0 / 8</span>
+            <span id="txt-shamar">0 / 8</span>
           </div>
-          <div class="bar-bg"><div class="bar-fill" id="bar-shamar"></div></div>
+          <div class="track"><div class="fill" id="fill-shamar"></div></div>
+        </div>
+        <div class="gfx-toggle">
+          <span>渲染管線：PMREM + SSAO + Bloom + Lens Shader</span>
+          <button class="gfx-btn" id="toggle-ssao">SSAO: 開啟 (Ultra)</button>
         </div>
       </div>
     </div>
 
-    <div id="center-ui">
+    <div id="center-hud">
       <div id="reticle"></div>
-      <div id="interaction-prompt"></div>
+      <div id="prompt-box"></div>
     </div>
 
     <div class="bottom-bar">
-      <div class="panel" id="exegetical-log">
-        <div id="log-title">【釋經註記 Exegetical Note】創世記 2:6, 15</div>
-        <div id="log-body">「有霧氣（ʾēd）從地上騰，滋潤遍地……耶和華神將那人安置在伊甸園，使他修理（ʿābad）看守（šāmar）。」伊甸園即人間首座至聖所。</div>
-        <div id="log-ref">來源：Ronald Hendel (Anchor Yale); John H. Walton (The Lost World of Adam and Eve).</div>
+      <div class="glass-panel" id="exegesis-panel">
+        <div id="ex-title">【釋經註記 Exegetical Note】創世記 2:6, 10–15</div>
+        <div id="ex-body">「有霧氣（ʾēd）從地上騰，滋潤遍地……有一道河從伊甸流出來，滋潤那園子，從那裡分為四道。」伊甸高山聖殿是天與地合一的原型聖所。</div>
+        <div id="ex-ref">來源：Ronald Hendel (Anchor Yale Genesis 1-11); John H. Walton (The Lost World of Adam and Eve).</div>
       </div>
 
-      <div class="panel controls-list">
-        <div><strong>[W/A/S/D]</strong> 移動步伐 (Movement) | <strong>[Shift]</strong> 疾行 (Sprint)</div>
-        <div><strong>[Mouse]</strong> 環視聖所 (Look)</div>
-        <div><strong>[E]</strong> 執行祭司職分：事奉/命名/採集生命果 (Interact)</div>
-        <div><strong>[R]</strong> 於知善惡樹前：奪取善惡定義權 (Transgress)</div>
+      <div class="glass-panel controls-panel">
+        <div><strong>[W/A/S/D]</strong> 移動步伐 | <strong>[Shift]</strong> 疾行 (Sprint)</div>
+        <div><strong>[Mouse]</strong> 環視聖所 | <strong>[P]</strong> 切換 SSAO 光遮蔽</div>
+        <div><strong>[E]</strong> 執行祭司職分：事奉/命名/領受生命果</div>
+        <div><strong>[R]</strong> 於知善惡樹前：奪取善惡定義權 (違約)</div>
       </div>
     </div>
   </div>
@@ -182,11 +207,13 @@
     import * as THREE from 'three';
     import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
     import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
     import { Sky } from 'three/addons/objects/Sky.js';
 
     // ==========================================
-    // 1. 遊戲狀態與釋經文獻庫 (State & Exegetical Data)
+    // 1. 遊戲狀態與創世記筆記本釋經資料庫
     // ==========================================
     const state = {
       isPlaying: false,
@@ -197,33 +224,35 @@
       animalsNamed: 0,
       riversTended: 0,
       hasEzer: false,
+      ssaoEnabled: true,
       currentTarget: null
     };
 
     const interactables = [];
-    const animatedCrowns = [];
+    const faunaList = [];
+    const windMaterials = [];
     let cherubimConstruct = null;
     let ezerMesh = null;
 
     const exegeticalNotes = {
       treeOfLife: {
-        title: "【生命樹 עֵץ הַחַיִּים】創世記 2:9, 3:22; 出埃及記 25:31-35",
-        body: "「生命樹代表超越最初受造氣息的永恆生命。最初的人本質上會死（susceptible to death），唯有持續吃生命樹果子才能更新生命。會幕中的純金燈台（Menorah）即為風格化的生命樹，其光照射陳設餅象徵神的生命供應。」",
+        title: "【生命樹 עֵץ הַחַיִּים】創世記 2:9, 3:22; 出埃及記 25:31–35",
+        body: "「生命樹代表超越神最初吹入人鼻孔之氣息的永恆生命。最初的人本質上是必死的（susceptible to death），唯有持續吃生命樹的果子才能更新生命。會幕中的七枝純金燈台（Menorah）即為風格化的生命樹，象徵神不息的生命光照。」",
         ref: "來源：Gordon J. Wenham (WBC Genesis 1-15); BibleProject (Adam to Noah Teacher Notes);《創造與人生智慧 L3》"
       },
       treeOfKnowledge: {
         title: "【知善惡樹 עֵץ הַדַּעַת טוֹב וָרָע】創世記 2:9, 2:17",
-        body: "「這棵樹關乎『決定何為善、何為惡』的主權。道德秩序由神設定而非人自定。抗拒蛇的引誘即如申命記 30 章摩西呼召以色列揀選生命；若伸手奪取，人就失去創造主的榮美。」",
+        body: "「這棵樹代表『決定何為善、何為惡』的至高權柄。道德秩序的標準是由神設定，而非人自行定義。若人伸手奪取，即背棄創造主的榮耀，轉向受造物的聲音，落入死亡與放逐。」",
         ref: "來源：《創造與人生智慧 L3》; Tim Mackie (Trees and Torah, BibleProject Classroom)."
       },
       riverPishon: {
-        title: "【第一道河：比遜河 Pishon】創世記 2:11-12",
-        body: "「環繞哈腓拉全地，那裡有上好的金子、珍珠（bdellium）和紅瑪瑙（carnelian）。這些貴重寶石正是建造會幕（出 25–31章）與所羅門聖殿（王上 6–7章）的裝飾材料，證明伊甸園即神聖聖所。」",
+        title: "【第一道河：比遜河 Pishon】創世記 2:11–12",
+        body: "「環繞哈腓拉全地，那裡有上好的金子、珍珠（bdellium）和紅瑪瑙（carnelian）。這些寶石與精金正是建造會幕（出 25–31章）與耶路撒冷聖殿（王上 6–7章）的核心材料，印證伊甸園即宇宙聖殿原型。」",
         ref: "來源：Ronald Hendel (Genesis 1-11, Anchor Yale); BibleProject Teacher Notes."
       },
       riverGihon: {
         title: "【第二道河：基訓河 Gihon】創世記 2:13",
-        body: "「環繞古實全地。自然界的大河皆由支流匯集而成，伊甸的河卻相反：由單一神聖源頭湧出並分為四道（yippārēd）流向四方，象徵神安穩、肯定且向外傾流給萬國的豐盛供應。」",
+        body: "「環繞古實全地。自然界的大河皆由支流匯聚而成，伊甸的河卻相反：由單一神聖源頭湧出並分為四道（yippārēd）流向四方，象徵神安穩、肯定且向外傾流給萬國的豐盛供應。」",
         ref: "來源：《創造與人生智慧 L3》; Ronald Hendel (Genesis 1-11)."
       },
       riverTigris: {
@@ -237,240 +266,383 @@
         ref: "來源：Norman Habel (Earth Bible Commentary);《創造與人生智慧 L3》"
       },
       namingAnimal: {
-        title: "【賦予活物名稱與秩序】創世記 2:19-20",
+        title: "【賦予活物名稱與秩序】創世記 2:19–20",
         body: "「耶和華神用土所造成的野地各樣走獸和空中各樣飛鳥都帶到那人面前，看他叫甚麼。那人怎樣叫各樣的活物，那就是牠的名字。只是那人沒有找到相配的幫助者。」",
         ref: "來源：Ronald Hendel (Genesis 1-11);《創造與人生智慧 L4》"
       },
       tardemahEzer: {
-        title: "【沉睡（Tardēmâ）與拯救之幫助者（ʿĒzer）】創世記 2:18, 21-22",
+        title: "【沉睡（Tardēmâ）與拯救之幫助者（ʿĒzer）】創世記 2:18, 21–22",
         body: "「『那人單獨不好』是創世記首次出現『不好』。希伯來文 ʿēzer 背後的動詞 ʿāzar 意為『從危險與死亡中拯救』（如詩 121:1）。女人將男人從孤立中拯救出來，同作皇家祭司。」",
         ref: "來源：Victor P. Hamilton (The Book of Genesis, Ch. 1-17); J. Richard Middleton;《創造與人生智慧 L4》"
       },
       exile: {
-        title: "【放逐與東門基路伯】創世記 3:22-24",
+        title: "【放逐與東門基路伯】創世記 3:22–24",
         body: "「耶和華神便打發他出伊甸園去，耕種他所自出之土；又在伊甸園的東邊（miqqedem），安設基路伯和四面轉動發火焰的劍，要把守生命樹的道路。」",
         ref: "來源：BibleProject (Adam to Noah & Jacob Teacher Notes)."
       }
     };
 
-    function updateLog(noteKey) {
-      const note = exegeticalNotes[noteKey];
-      if (!note) return;
-      document.getElementById('log-title').textContent = note.title;
-      document.getElementById('log-body').textContent = note.body;
-      document.getElementById('log-ref').textContent = note.ref;
+    function updateLog(key) {
+      const n = exegeticalNotes[key];
+      if (!n) return;
+      document.getElementById('ex-title').textContent = n.title;
+      document.getElementById('ex-body').textContent = n.body;
+      document.getElementById('ex-ref').textContent = n.ref;
     }
 
     // ==========================================
-    // 2. 渲染器、相機與後製管線 (Renderer & Post-Processing)
+    // 2. 確定性 FBM 雜訊與微表面貼圖引擎 (Deterministic FBM & PBR Map Generator)
+    // ==========================================
+    function hash2D(x, y) {
+      let n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+      return n - Math.floor(n);
+    }
+
+    function valueNoise(x, y) {
+      const ix = Math.floor(x), iy = Math.floor(y);
+      const fx = x - ix, fy = y - iy;
+      const ux = fx * fx * (3.0 - 2.0 * fx);
+      const uy = fy * fy * (3.0 - 2.0 * fy);
+      const a = hash2D(ix, iy);
+      const b = hash2D(ix + 1, iy);
+      const c = hash2D(ix, iy + 1);
+      const d = hash2D(ix + 1, iy + 1);
+      return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+    }
+
+    function fbm(x, y, octaves = 5) {
+      let val = 0, amp = 0.5, freq = 1.0;
+      for (let i = 0; i < octaves; i++) {
+        val += amp * valueNoise(x * freq, y * freq);
+        freq *= 2.03;
+        amp *= 0.48;
+      }
+      return val;
+    }
+
+    Math.smoothstep = (x, min, max) => {
+      const t = Math.max(0, Math.min(1, (x - min) / (max - min)));
+      return t * t * (3 - 2 * t);
+    };
+
+    // 生成高精度切線空間法線貼圖與粗糙度貼圖 (Tangent-Space Normal & Roughness Map)
+    function generatePBRMaps(size = 512, scale = 18, strength = 3.2) {
+      const normCanvas = document.createElement('canvas');
+      normCanvas.width = size; normCanvas.height = size;
+      const nCtx = normCanvas.getContext('2d');
+      const nImg = nCtx.createImageData(size, size);
+
+      const roughCanvas = document.createElement('canvas');
+      roughCanvas.width = size; roughCanvas.height = size;
+      const rCtx = roughCanvas.getContext('2d');
+      const rImg = rCtx.createImageData(size, size);
+
+      const heights = new Float32Array(size * size);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          heights[y * size + x] = fbm((x / size) * scale, (y / size) * scale, 5);
+        }
+      }
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          const hL = heights[y * size + ((x - 1 + size) % size)];
+          const hR = heights[y * size + ((x + 1) % size)];
+          const hD = heights[((y - 1 + size) % size) * size + x];
+          const hU = heights[((y + 1) % size) * size + x];
+
+          const dx = (hL - hR) * strength;
+          const dy = (hD - hU) * strength;
+          const dz = 1.0 / Math.sqrt(dx * dx + dy * dy + 1.0);
+
+          nImg.data[idx] = Math.floor(((dx * dz) * 0.5 + 0.5) * 255);
+          nImg.data[idx + 1] = Math.floor(((dy * dz) * 0.5 + 0.5) * 255);
+          nImg.data[idx + 2] = Math.floor(dz * 255);
+          nImg.data[idx + 3] = 255;
+
+          const rVal = Math.floor((0.45 + heights[y * size + x] * 0.45) * 255);
+          rImg.data[idx] = rVal;
+          rImg.data[idx + 1] = rVal;
+          rImg.data[idx + 2] = rVal;
+          rImg.data[idx + 3] = 255;
+        }
+      }
+      nCtx.putImageData(nImg, 0, 0);
+      rCtx.putImageData(rImg, 0, 0);
+
+      const normalMap = new THREE.CanvasTexture(normCanvas);
+      normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
+      normalMap.repeat.set(32, 32);
+
+      const roughnessMap = new THREE.CanvasTexture(roughCanvas);
+      roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping;
+      roughnessMap.repeat.set(32, 32);
+
+      return { normalMap, roughnessMap };
+    }
+
+    const groundPBR = generatePBRMaps(512, 24, 4.5);
+    const barkPBR = generatePBRMaps(256, 14, 6.0);
+    barkPBR.normalMap.repeat.set(3, 10);
+
+    // ==========================================
+    // 3. 渲染器、PMREM 環境光探針與多通道後製管線
     // ==========================================
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x16222f, 0.0065);
+    scene.fog = new THREE.FogExp2(0x182532, 0.0045);
 
-    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 500);
+    const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 600);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.08;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
-    // Post-Processing Composer (HDR Bloom)
-    const composer = new EffectComposer(renderer);
-    const renderPass = new RenderPass(scene, camera);
-    composer.addPass(renderPass);
-
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.75, // strength
-      0.55, // radius
-      0.72  // threshold
-    );
-    composer.addPass(bloomPass);
-
-    // ==========================================
-    // 3. 物理大氣散射天空與全域照明 (Atmospheric Sky & Lighting)
-    // ==========================================
+    // 物理大氣天空與 PMREM IBL 烘焙 (GTA-style Dynamic Sky & Radiance Probe)
     const sky = new Sky();
-    sky.scale.setScalar(1000);
+    sky.scale.setScalar(1200);
     scene.add(sky);
 
     const skyUniforms = sky.material.uniforms;
-    skyUniforms['turbidity'].value = 6;
-    skyUniforms['rayleigh'].value = 1.8;
-    skyUniforms['mieCoefficient'].value = 0.005;
-    skyUniforms['mieDirectionalG'].value = 0.82;
+    skyUniforms['turbidity'].value = 4.5;
+    skyUniforms['rayleigh'].value = 1.65;
+    skyUniforms['mieCoefficient'].value = 0.0045;
+    skyUniforms['mieDirectionalG'].value = 0.86;
 
     const sunPos = new THREE.Vector3();
-    function setSunElevation(elevationDeg, azimuthDeg) {
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+
+    function updateAtmosphere(elevationDeg, azimuthDeg) {
       const phi = THREE.MathUtils.degToRad(90 - elevationDeg);
       const theta = THREE.MathUtils.degToRad(azimuthDeg);
       sunPos.setFromSphericalCoords(1, phi, theta);
       skyUniforms['sunPosition'].value.copy(sunPos);
+
+      // 烘焙即時 HDR 環境反射貼圖供黃金、水面與寶石使用
+      const envScene = new THREE.Scene();
+      const skyClone = new Sky();
+      skyClone.scale.setScalar(100);
+      skyClone.material.uniforms['turbidity'].value = skyUniforms['turbidity'].value;
+      skyClone.material.uniforms['rayleigh'].value = skyUniforms['rayleigh'].value;
+      skyClone.material.uniforms['sunPosition'].value.copy(sunPos);
+      envScene.add(skyClone);
+
+      const renderTarget = pmremGenerator.fromScene(envScene, 0.04);
+      scene.environment = renderTarget.texture;
     }
-    setSunElevation(22, 145); // 黃金神聖時刻仰角
+    updateAtmosphere(19, 138); // 黃金時刻斜射光
 
-    const hemiLight = new THREE.HemisphereLight(0xfffaed, 0x1e3c28, 0.65);
-    scene.add(hemiLight);
+    // 太陽主光源與高精度軟陰影
+    const sunLight = new THREE.DirectionalLight(0xffe4b5, 3.2);
+    sunLight.position.copy(sunPos).multiplyScalar(140);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 4096;
+    sunLight.shadow.mapSize.height = 4096;
+    sunLight.shadow.camera.near = 10;
+    sunLight.shadow.camera.far = 320;
+    const shadowBound = 95;
+    sunLight.shadow.camera.left = -shadowBound;
+    sunLight.shadow.camera.right = shadowBound;
+    sunLight.shadow.camera.top = shadowBound;
+    sunLight.shadow.camera.bottom = -shadowBound;
+    sunLight.shadow.bias = -0.0004;
+    scene.add(sunLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffe6b3, 2.6);
-    dirLight.position.copy(sunPos).multiplyScalar(120);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 4096;
-    dirLight.shadow.mapSize.height = 4096;
-    dirLight.shadow.camera.near = 10;
-    dirLight.shadow.camera.far = 300;
-    const d = 95;
-    dirLight.shadow.camera.left = -d;
-    dirLight.shadow.camera.right = d;
-    dirLight.shadow.camera.top = d;
-    dirLight.shadow.camera.bottom = -d;
-    dirLight.shadow.bias = -0.0005;
-    scene.add(dirLight);
+    const ambientHemi = new THREE.HemisphereLight(0xfff5e4, 0x1a3322, 0.55);
+    scene.add(ambientHemi);
 
-    // 至聖所中央神聖臨在光 (Shekinah Presence Light)
-    const sanctuaryLight = new THREE.PointLight(0xffcc44, 5.0, 45, 1.5);
-    sanctuaryLight.position.set(0, 12, 0);
-    scene.add(sanctuaryLight);
+    // 至聖所榮光點光源
+    const shekinahLight = new THREE.PointLight(0xffcb52, 6.5, 50, 1.4);
+    shekinahLight.position.set(0, 13, 0);
+    scene.add(shekinahLight);
+
+    // Post-Processing Composer (RenderPass -> SSAOPass -> UnrealBloomPass -> Cinematic Lens Pass)
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+
+    const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
+    ssaoPass.kernelRadius = 6.5;
+    ssaoPass.minDistance = 0.001;
+    ssaoPass.maxDistance = 0.09;
+    composer.addPass(ssaoPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.65, // strength
+      0.5,  // radius
+      0.78  // threshold
+    );
+    composer.addPass(bloomPass);
+
+    // 電影級鏡頭色差、暗角與底片顆粒 ShaderPass (RAGE Cinematic Camera Pass)
+    const CinematicLensShader = {
+      uniforms: {
+        tDiffuse: { value: null },
+        uTime: { value: 0 },
+        uChromatic: { value: 0.0018 },
+        uVignette: { value: 0.32 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float uTime;
+        uniform float uChromatic;
+        uniform float uVignette;
+        varying vec2 vUv;
+
+        float rand(vec2 co) {
+          return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
+
+        void main() {
+          vec2 dist = vUv - 0.5;
+          vec2 offset = dist * uChromatic;
+          float r = texture2D(tDiffuse, vUv + offset).r;
+          float g = texture2D(tDiffuse, vUv).g;
+          float b = texture2D(tDiffuse, vUv - offset).b;
+          vec3 col = vec3(r, g, b);
+
+          // 微妙底片顆粒 (Subtle Film Grain)
+          float grain = (rand(vUv + fract(uTime)) - 0.5) * 0.022;
+          col += grain;
+
+          // 光學鏡頭暗角 (Optical Vignette)
+          float len = length(dist);
+          col *= smoothstep(0.85, 0.85 - uVignette, len);
+
+          // S-Curve 對比微調
+          col = mix(col, smoothstep(0.0, 1.0, col), 0.18);
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    };
+    const lensPass = new ShaderPass(CinematicLensShader);
+    composer.addPass(lensPass);
 
     // ==========================================
-    // 4. 程序化 PBR 材質貼圖生成器 (Procedural Normal/Roughness Generator)
-    // ==========================================
-    function createProceduralNoiseTexture(size = 512, contrast = 40) {
-      const canvas = document.createElement('canvas');
-      canvas.width = size; canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      const imgData = ctx.createImageData(size, size);
-      const data = imgData.data;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const px = (i / 4) % size;
-        const py = Math.floor((i / 4) / size);
-        const wave = Math.sin(px * 0.08) * Math.cos(py * 0.08) * 25;
-        const grain = (Math.random() - 0.5) * contrast;
-        const val = Math.min(255, Math.max(0, 128 + wave + grain));
-        data[i] = val;
-        data[i + 1] = val;
-        data[i + 2] = 255; // Z-up normal bias
-        data[i + 3] = 255;
-      }
-      ctx.putImageData(imgData, 0, 0);
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(24, 24);
-      return tex;
-    }
-
-    const terrainNormalMap = createProceduralNoiseTexture(512, 55);
-    const barkNormalMap = createProceduralNoiseTexture(256, 80);
-    barkNormalMap.repeat.set(4, 8);
-
-    // ==========================================
-    // 5. 連續有機高山聖所地形數學函數 (Continuous Organic Terrain)
+    // 4. FBM 宇宙高山聖所地形雕刻 (6-Octave FBM Terrain & Wetness Map)
     // ==========================================
     function getEdenElevation(x, z) {
       const r = Math.sqrt(x * x + z * z);
-      const angle = Math.atan2(z, x);
 
-      // 三層平滑宇宙高山輪廓 (Cosmic Mountain Profile)
-      // 1. 中央至聖所高台 (r < 18) -> Y ≈ 6.5
-      const innerSanctuary = 3.2 / (1.0 + Math.pow(r / 17.5, 6));
-      // 2. 伊甸森林台地 (r < 58) -> Y ≈ 3.3
-      const gardenPlateau = 3.3 / (1.0 + Math.pow(r / 58.0, 8));
-      // 自然有機地表起伏 (Organic Undulation)
-      const organicNoise = (Math.sin(x * 0.12) * Math.cos(z * 0.12) * 0.35 +
-                            Math.sin(x * 0.05 + z * 0.07) * 0.45) *
-                           Math.smoothstep(r, 12, 30);
+      // 1. 中央至聖所高台 (Inner Sanctuary Ziggurat Mound, r < 18)
+      const innerSanctuary = 3.6 / (1.0 + Math.pow(r / 17.5, 7));
 
-      // 四道河河床雕刻 (Carve 4 River Channels along X and Z axes)
+      // 2. 伊甸森林台地 (Garden Plateau, r < 60)
+      const gardenPlateau = 3.8 / (1.0 + Math.pow(r / 59.0, 9));
+
+      // 3. FBM 自然岩石與地貌起伏 (6-Octave Fractal Detail)
+      const fbmVal = fbm(x * 0.035 + 10.5, z * 0.035 + 10.5, 6);
+      const ridgeVal = 1.0 - Math.abs(fbm(x * 0.02, z * 0.02, 4) * 2.0 - 1.0);
+      const organicHeight = ((fbmVal - 0.5) * 2.2 + ridgeVal * 0.75) * Math.smoothstep(r, 13, 28);
+
+      // 4. 外圍遠山環繞 (Distant Horizon Mountains, r > 78)
+      const outerMountains = Math.smoothstep(r, 76, 115) * (fbm(x * 0.025, z * 0.025, 5) * 22.0);
+
+      // 5. 四道河河道雕刻 (4 River Channels)
       const distToAxis = Math.min(Math.abs(x), Math.abs(z));
       let riverCarve = 0;
-      if (r > 3.8 && r < 68 && distToAxis < 3.6) {
-        const channelProfile = Math.cos((distToAxis / 3.6) * (Math.PI / 2));
-        riverCarve = channelProfile * 0.85;
+      if (r > 3.6 && r < 70 && distToAxis < 4.0) {
+        const profile = Math.cos((distToAxis / 4.0) * (Math.PI / 2));
+        riverCarve = profile * profile * 1.15;
       }
 
-      return innerSanctuary + gardenPlateau + organicNoise - riverCarve;
+      return innerSanctuary + gardenPlateau + organicHeight + outerMountains - riverCarve;
     }
 
-    // 補充 Math.smoothstep
-    Math.smoothstep = function(x, min, max) {
-      if (x <= min) return 0;
-      if (x >= max) return 1;
-      x = (x - min) / (max - min);
-      return x * x * (3 - 2 * x);
-    };
-
-    // 建立高密度頂點色地形網格 (240x240 Subdivisions)
-    const terrainGeo = new THREE.PlaneGeometry(220, 220, 240, 240);
+    const terrainGeo = new THREE.PlaneGeometry(250, 250, 320, 320);
     terrainGeo.rotateX(-Math.PI / 2);
 
     const posAttr = terrainGeo.attributes.position;
-    const colors = [];
-    const color = new THREE.Color();
+    const vColors = [];
+    const cTemp = new THREE.Color();
 
     for (let i = 0; i < posAttr.count; i++) {
       const vx = posAttr.getX(i);
       const vz = posAttr.getZ(i);
       const vy = getEdenElevation(vx, vz);
       posAttr.setY(i, vy);
+    }
+    terrainGeo.computeVertexNormals();
+    const normAttr = terrainGeo.attributes.normal;
 
+    for (let i = 0; i < posAttr.count; i++) {
+      const vx = posAttr.getX(i);
+      const vy = posAttr.getY(i);
+      const vz = posAttr.getZ(i);
+      const ny = normAttr.getY(i); // 坡度法線 Y 分量 (越小代表越陡峭)
       const r = Math.sqrt(vx * vx + vz * vz);
       const distToAxis = Math.min(Math.abs(vx), Math.abs(vz));
+      const microNoise = fbm(vx * 0.15, vz * 0.15, 3);
 
-      // 依據高度與水文分配頂點材質顏色
-      if (r > 3.8 && r < 66 && distToAxis < 3.5) {
-        // 河床金沙與卵石
-        color.setHex(0x8c7853);
-      } else if (vy > 5.8) {
-        // 至聖所高台翠綠聖潔草地與金粉微光
-        color.setHex(0x2e6f40);
-      } else if (vy > 2.2) {
-        // 伊甸森林肥沃地土與深綠苔蘚
-        color.setHex(0x1f4e2c).lerp(new THREE.Color(0x3a5f27), (Math.sin(vx * 0.2) + 1) * 0.5);
+      if (r > 3.6 && r < 68 && distToAxis < 3.9) {
+        // 濕潤河岸金沙與深色鵝卵石 (Wet Riverbank & Gold-flecked Silt)
+        cTemp.setHex(0x6e5a3e).lerp(new THREE.Color(0xc5a059), microNoise * 0.5);
+      } else if (ny < 0.78) {
+        // 陡峭岩壁露出石灰岩與玄武岩肌理 (Exposed Cliff Rock)
+        cTemp.setHex(0x4a4e54).lerp(new THREE.Color(0x6c655b), microNoise);
+      } else if (vy > 6.4 && r < 19) {
+        // 至聖所高台豐茂翡翠草地
+        cTemp.setHex(0x28593a).lerp(new THREE.Color(0x3f7a4d), microNoise);
+      } else if (r < 60) {
+        // 伊甸森林腐植土與苔蘚地衣
+        cTemp.setHex(0x1d4227).lerp(new THREE.Color(0x345929), microNoise);
       } else {
-        // 園外曠野紅土 (ʾădāmâ)
-        color.setHex(0x4a3525);
+        // 園外曠野紅土與乾燥岩層 (ʾădāmâ)
+        cTemp.setHex(0x4d3624).lerp(new THREE.Color(0x2f241c), microNoise);
       }
-      colors.push(color.r, color.g, color.b);
+      vColors.push(cTemp.r, cTemp.g, cTemp.b);
     }
 
-    terrainGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    terrainGeo.computeVertexNormals();
+    terrainGeo.setAttribute('color', new THREE.Float32BufferAttribute(vColors, 3));
 
     const terrainMat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      normalMap: terrainNormalMap,
-      normalScale: new THREE.Vector2(0.45, 0.45),
-      roughness: 0.78,
-      metalness: 0.08
+      normalMap: groundPBR.normalMap,
+      normalScale: new THREE.Vector2(0.85, 0.85),
+      roughnessMap: groundPBR.roughnessMap,
+      roughness: 0.72,
+      metalness: 0.1,
+      envMapIntensity: 0.65
     });
     const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
     terrainMesh.receiveShadow = true;
     scene.add(terrainMesh);
 
-    // 至聖所聖殿黃金冠冕環與希伯來文柱廊 (Sanctuary Architecture)
-    const sanctumRingGeo = new THREE.TorusGeometry(17.2, 0.32, 24, 128);
-    const goldPBRMat = new THREE.MeshStandardMaterial({
-      color: 0xffd700, metalness: 0.92, roughness: 0.15, emissive: 0x332200, emissiveIntensity: 0.3
+    // 至聖所聖殿黃金鑲邊與刻紋基座 (Sanctuary Golden Crown & Pillars)
+    const goldPBRMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffd266, metalness: 0.96, roughness: 0.14,
+      clearcoat: 0.6, normalMap: groundPBR.normalMap, normalScale: new THREE.Vector2(0.15, 0.15),
+      envMapIntensity: 1.8
     });
-    const sanctumRing = new THREE.Mesh(sanctumRingGeo, goldPBRMat);
+    const sanctumRing = new THREE.Mesh(new THREE.TorusGeometry(17.4, 0.35, 32, 128), goldPBRMat);
     sanctumRing.rotation.x = Math.PI / 2;
-    sanctumRing.position.y = 6.35;
+    sanctumRing.position.y = getEdenElevation(17.4, 0) + 0.15;
+    sanctumRing.castShadow = true;
     scene.add(sanctumRing);
 
     // ==========================================
-    // 6. 自訂 GLSL 流體水體著色器 (Custom GLSL River & Fountain Shader)
+    // 5. 次世代焦散流體水體著色器 (Caustics & Gerstner Water Shader)
     // ==========================================
     const waterUniforms = {
       uTime: { value: 0 },
       uSunDir: { value: sunPos.clone().normalize() },
-      uWaterColor: { value: new THREE.Color(0x007799) },
-      uHighlightColor: { value: new THREE.Color(0x88ffff) }
+      uDeepColor: { value: new THREE.Color(0x063847) },
+      uShallowColor: { value: new THREE.Color(0x00a896) },
+      uCausticColor: { value: new THREE.Color(0x99ffff) }
     };
 
     const waterShaderMat = new THREE.ShaderMaterial({
@@ -480,125 +652,173 @@
         uniform float uTime;
         varying vec3 vWorldPos;
         varying vec2 vUv;
+
         void main() {
           vUv = uv;
-          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-          // 動態水流波浪頂點位移
-          float wave = sin(worldPosition.x * 1.4 - uTime * 3.2) * 0.06
-                     + cos(worldPosition.z * 1.4 - uTime * 2.8) * 0.06;
-          worldPosition.y += wave;
-          vWorldPos = worldPosition.xyz;
-          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          // Gerstner 多向波浪合成
+          float w1 = sin(wp.x * 1.6 - uTime * 3.4) * 0.055;
+          float w2 = cos(wp.z * 1.6 - uTime * 3.0) * 0.055;
+          float w3 = sin((wp.x + wp.z) * 2.8 - uTime * 4.5) * 0.025;
+          wp.y += w1 + w2 + w3;
+          vWorldPos = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
         }
       `,
       fragmentShader: `
         uniform float uTime;
         uniform vec3 uSunDir;
-        uniform vec3 uWaterColor;
-        uniform vec3 uHighlightColor;
+        uniform vec3 uDeepColor;
+        uniform vec3 uShallowColor;
+        uniform vec3 uCausticColor;
         varying vec3 vWorldPos;
         varying vec2 vUv;
+
+        // 程序化焦散網格函數 (Procedural Optical Caustics)
+        float causticPattern(vec2 uv, float t) {
+          vec2 p = mod(uv * 6.2831853, 6.2831853) - 250.0;
+          vec2 i = vec2(p);
+          float c = 1.0;
+          float inten = 0.005;
+          for (int n = 0; n < 4; n++) {
+            float time = t * (1.0 - (3.5 / float(n + 1)));
+            i = p + vec2(cos(time - i.x) + sin(time + i.y), sin(time - i.y) + cos(time + i.x));
+            c += 1.0 / length(vec2(p.x / (sin(i.x + time) / inten), p.y / (cos(i.y + time) / inten)));
+          }
+          c /= 4.0;
+          c = 1.17 - pow(c, 1.4);
+          return pow(abs(c), 8.0);
+        }
+
         void main() {
-          // 計算從伊甸中心向外流出的波紋法線擾動
-          float radialDist = length(vWorldPos.xz);
-          float ripple1 = sin(radialDist * 2.2 - uTime * 4.0);
-          float ripple2 = cos(vWorldPos.x * 2.5 + vWorldPos.z * 2.5 - uTime * 2.5);
-          vec3 pseudoNormal = normalize(vec3(ripple1 * 0.2, 1.0, ripple2 * 0.2));
+          float radial = length(vWorldPos.xz);
+          vec2 flowUv = vWorldPos.xz * 0.18 - normalize(vWorldPos.xz + 0.001) * (uTime * 0.45);
 
-          vec3 viewDir = normalize(cameraPosition - vWorldPos);
-          float fresnel = pow(1.0 - max(dot(viewDir, pseudoNormal), 0.0), 3.0);
+          float c1 = causticPattern(flowUv, uTime * 0.8);
+          float c2 = causticPattern(flowUv + 0.35, -uTime * 0.6);
+          float caustics = clamp(c1 + c2 * 0.6, 0.0, 1.0);
 
-          vec3 reflectDir = reflect(-uSunDir, pseudoNormal);
-          float spec = pow(max(dot(viewDir, reflectDir), 0.0), 48.0);
+          // 法線微擾動
+          float nx = sin(vWorldPos.x * 3.5 - uTime * 4.2) * 0.18 + cos(vWorldPos.z * 4.2 + uTime * 3.1) * 0.12;
+          float nz = cos(vWorldPos.z * 3.5 - uTime * 3.8) * 0.18 + sin(vWorldPos.x * 4.0 - uTime * 2.9) * 0.12;
+          vec3 N = normalize(vec3(nx, 1.0, nz));
 
-          vec3 col = mix(uWaterColor, uHighlightColor, fresnel * 0.65 + ripple1 * 0.08);
-          col += vec3(1.0, 0.95, 0.8) * spec * 1.3;
+          vec3 V = normalize(cameraPosition - vWorldPos);
+          float fresnel = pow(1.0 - max(dot(V, N), 0.0), 3.5);
 
-          gl_FragColor = vec4(col, 0.84);
+          // 岸邊白沫 (Shoreline Foam)
+          float edgeFoam = smoothstep(0.38, 0.49, abs(vUv.y - 0.5));
+
+          // 太陽鏡面高光 (Sun Specular Glint)
+          vec3 R = reflect(-uSunDir, N);
+          float spec = pow(max(dot(V, R), 0.0), 96.0);
+
+          vec3 waterCol = mix(uShallowColor, uDeepColor, fresnel * 0.75);
+          waterCol += uCausticColor * caustics * 0.55;
+          waterCol = mix(waterCol, vec3(0.92, 0.98, 1.0), edgeFoam * 0.65);
+          waterCol += vec3(1.0, 0.94, 0.78) * spec * 2.2;
+
+          gl_FragColor = vec4(waterCol, 0.88);
         }
       `
     });
 
-    // 中央活水泉源池 (The Primeval Fountain ʾēd)
-    const poolGeo = new THREE.CylinderGeometry(4.5, 4.5, 0.4, 64);
-    const poolMesh = new THREE.Mesh(poolGeo, waterShaderMat);
-    poolMesh.position.set(0, 6.3, 0);
-    scene.add(poolMesh);
+    // 中央活水湧泉池 (Gen 2:6, 10)
+    const fountainPool = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 0.4, 64), waterShaderMat);
+    fountainPool.position.set(0, getEdenElevation(0, 0) - 0.15, 0);
+    scene.add(fountainPool);
 
-    // 四道河順應地形坡度曲面生成 (4 River Ribbons following Terrain Elevation)
-    const riverConfigs = [
+    // 四道河與哈腓拉寶石礦脈 (Gen 2:10-14)
+    const riverDefinitions = [
       { name: "比遜河 (Pishon - 哈腓拉精金、珍珠與紅瑪瑙)", angle: 0, note: "riverPishon", hasGems: true },
       { name: "基訓河 (Gihon - 環繞古實全地)", angle: Math.PI / 2, note: "riverGihon", hasGems: false },
       { name: "底格里斯河 (Hiddekel / Tigris - 亞述東邊)", angle: Math.PI, note: "riverTigris", hasGems: false },
       { name: "幼發拉底河 (Perat / Euphrates - 伯拉大河)", angle: -Math.PI / 2, note: "riverEuphrates", hasGems: false }
     ];
 
-    riverConfigs.forEach((r) => {
-      // 製作貼合高程曲線的水道網格
-      const rGeo = new THREE.PlaneGeometry(60, 4.4, 80, 12);
+    riverDefinitions.forEach((r) => {
+      const rGeo = new THREE.PlaneGeometry(64, 5.0, 96, 16);
       rGeo.rotateX(-Math.PI / 2);
       const rPos = rGeo.attributes.position;
       for (let i = 0; i < rPos.count; i++) {
-        const lx = rPos.getX(i) + 34; // 從 r=4 延伸至 r=64
-        const lz = rPos.getZ(i);
+        const lx = rPos.getX(i) + 35.5;
         rPos.setX(i, lx);
-        // 水面略高於雕刻後的河床底
         const bedY = getEdenElevation(lx, 0);
-        rPos.setY(i, bedY + 0.42);
+        rPos.setY(i, bedY + 0.46);
       }
       rGeo.computeVertexNormals();
 
       const rGroup = new THREE.Group();
-      const rMesh = new THREE.Mesh(rGeo, waterShaderMat);
-      rGroup.add(rMesh);
+      rGroup.add(new THREE.Mesh(rGeo, waterShaderMat));
 
-      // 河道祭司看守聖壇節點 (Priestly Shamar Node)
-      const shrineGroup = new THREE.Group();
-      const basePillar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.7, 0.95, 1.4, 16),
-        new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.3, metalness: 0.2 })
-      );
-      const crystalMat = new THREE.MeshPhysicalMaterial({
-        color: 0x00d2d3, emissive: 0x0088aa, emissiveIntensity: 1.2,
-        roughness: 0.05, transmission: 0.85, thickness: 1.5
+      // 河岸鵝卵石與岩石群
+      const rockMat = new THREE.MeshStandardMaterial({
+        color: 0x59554f, normalMap: groundPBR.normalMap, roughness: 0.45, metalness: 0.15
       });
-      const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.95, 1), crystalMat);
-      crystal.position.y = 2.0;
-      shrineGroup.add(basePillar, crystal);
+      for (let k = 0; k < 28; k++) {
+        const rx = 14 + Math.random() * 48;
+        const rz = (k % 2 === 0 ? 1 : -1) * (2.6 + Math.random() * 1.8);
+        const ry = getEdenElevation(rx, rz);
+        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.35 + Math.random() * 0.55, 1), rockMat);
+        rock.scale.set(1.2, 0.65, 1.0);
+        rock.position.set(rx, ry + 0.1, rz);
+        rock.rotation.set(Math.random(), Math.random(), Math.random());
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+        rGroup.add(rock);
+      }
 
-      const nodeRadius = 35;
-      const nodeY = getEdenElevation(nodeRadius, 0) + 0.6;
-      shrineGroup.position.set(nodeRadius, nodeY, 0);
-      rGroup.add(shrineGroup);
-
-      // 比遜河岸：哈腓拉的金子、珍珠(Bdellium)、紅瑪瑙(Carnelian) (Gen 2:11-12)
+      // 比遜河：高折射率紅瑪瑙 (Carnelian)、珍珠 (Bdellium) 與精金 (Gen 2:11-12)
       if (r.hasGems) {
         const carnelianMat = new THREE.MeshPhysicalMaterial({
-          color: 0xc23616, emissive: 0x661105, emissiveIntensity: 0.5,
-          roughness: 0.1, transmission: 0.7, thickness: 1.2
+          color: 0xd63031, emissive: 0x550909, emissiveIntensity: 0.4,
+          roughness: 0.06, transmission: 0.82, ior: 1.54, thickness: 1.8, envMapIntensity: 2.0
         });
         const bdelliumMat = new THREE.MeshPhysicalMaterial({
-          color: 0xf5f6fa, emissive: 0x444455, emissiveIntensity: 0.3,
-          roughness: 0.08, clearcoat: 1.0, iridescence: 0.8
+          color: 0xfdfefe, emissive: 0x2f3640, emissiveIntensity: 0.25,
+          roughness: 0.05, clearcoat: 1.0, iridescence: 0.9, iridescenceIOR: 1.4, envMapIntensity: 2.0
         });
 
-        for (let i = 0; i < 16; i++) {
-          const dist = 20 + i * 2.4;
-          const side = (i % 2 === 0 ? 1 : -1) * (2.6 + Math.random() * 1.4);
-          const gy = getEdenElevation(dist, side);
-          const matChoice = i % 3 === 0 ? goldPBRMat : (i % 3 === 1 ? carnelianMat : bdelliumMat);
-          const gemMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(0.4 + Math.random() * 0.25, 0), matChoice);
-          gemMesh.position.set(dist, gy + 0.2, side);
-          gemMesh.rotation.set(Math.random() * 3, Math.random() * 3, 0);
-          gemMesh.castShadow = true;
-          rGroup.add(gemMesh);
+        for (let g = 0; g < 22; g++) {
+          const gx = 19 + g * 2.1;
+          const gz = (g % 2 === 0 ? 1 : -1) * (2.5 + (g % 3) * 0.6);
+          const gy = getEdenElevation(gx, gz);
+          const mat = g % 3 === 0 ? goldPBRMat : (g % 3 === 1 ? carnelianMat : bdelliumMat);
+          const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.42 + (g % 3) * 0.12, 1), mat);
+          gem.position.set(gx, gy + 0.28, gz);
+          gem.rotation.set(g, g * 1.5, 0);
+          gem.castShadow = true;
+          rGroup.add(gem);
         }
       }
+
+      // 河道祭司看守聖壇 (Priestly Shamar Sanctuary Node)
+      const shrineGroup = new THREE.Group();
+      const baseMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.85, 1.15, 1.5, 24),
+        new THREE.MeshStandardMaterial({ color: 0xdfe4ea, normalMap: groundPBR.normalMap, roughness: 0.3 })
+      );
+      const trimRing = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.08, 16, 48), goldPBRMat);
+      trimRing.rotation.x = Math.PI / 2;
+      trimRing.position.y = 0.75;
+
+      const crystalMat = new THREE.MeshPhysicalMaterial({
+        color: 0x00cec9, emissive: 0x007799, emissiveIntensity: 1.5,
+        roughness: 0.05, transmission: 0.88, ior: 1.6, thickness: 2.0
+      });
+      const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.0, 1), crystalMat);
+      crystal.position.y = 2.2;
+      shrineGroup.add(baseMesh, trimRing, crystal);
+
+      const nodeR = 36;
+      const nodeY = getEdenElevation(nodeR, 0) + 0.6;
+      shrineGroup.position.set(nodeR, nodeY, 0);
+      rGroup.add(shrineGroup);
 
       rGroup.rotation.y = r.angle;
       scene.add(rGroup);
 
-      const worldPos = new THREE.Vector3(nodeRadius, nodeY + 1.5, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), r.angle);
+      const worldPos = new THREE.Vector3(nodeR, nodeY + 1.5, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), r.angle);
       interactables.push({
         type: 'river',
         name: r.name,
@@ -610,299 +830,441 @@
     });
 
     // ==========================================
-    // 7. 有機分枝樹木與兩棵聖樹生成系統 (Organic Branching Trees & Sacred Trees)
+    // 6. 體積上帝光與有機分枝聖樹系統 (Volumetric God-Rays & Organic Trees)
     // ==========================================
-    function buildOrganicTree({ x, z, scale = 1, trunkColor = 0x4a3222, leafColor = 0x2d6a4f, emissive = 0x000000, emissiveIntensity = 0, isSacred = false }) {
-      const group = new THREE.Group();
-      const baseY = getEdenElevation(x, z);
-      group.position.set(x, baseY, z);
+    function addGodRayCone(x, y, z, colorHex, radiusBottom = 9, height = 28) {
+      const coneGeo = new THREE.ConeGeometry(radiusBottom, height, 32, 1, true);
+      const coneMat = new THREE.ShaderMaterial({
+        uniforms: {
+          uColor: { value: new THREE.Color(colorHex) }
+        },
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        vertexShader: `
+          varying vec2 vUv;
+          varying vec3 vNormal;
+          varying vec3 vViewPos;
+          void main() {
+            vUv = uv;
+            vNormal = normalize(normalMatrix * normal);
+            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+            vViewPos = -mvPos.xyz;
+            gl_Position = projectionMatrix * mvPos;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uColor;
+          varying vec2 vUv;
+          varying vec3 vNormal;
+          varying vec3 vViewPos;
+          void main() {
+            vec3 V = normalize(vViewPos);
+            float edgeFade = pow(abs(dot(V, vNormal)), 1.8);
+            float verticalFade = smoothstep(0.0, 0.35, vUv.y) * smoothstep(1.0, 0.2, vUv.y);
+            float alpha = edgeFade * verticalFade * 0.16;
+            gl_FragColor = vec4(uColor, alpha);
+          }
+        `
+      });
+      const cone = new THREE.Mesh(coneGeo, coneMat);
+      cone.position.set(x, y + height * 0.42, z);
+      cone.rotation.z = -0.15;
+      cone.rotation.x = 0.1;
+      scene.add(cone);
+    }
 
-      const trunkMat = new THREE.MeshStandardMaterial({
-        color: trunkColor, normalMap: barkNormalMap, roughness: 0.85, metalness: isSacred ? 0.35 : 0.05
+    function createWindFoliageMaterial(baseColorHex, emissiveHex = 0x000000, emissiveInt = 0, isSacred = false) {
+      const mat = new THREE.MeshStandardMaterial({
+        color: baseColorHex,
+        emissive: emissiveHex,
+        emissiveIntensity: emissiveInt,
+        roughness: isSacred ? 0.25 : 0.48,
+        metalness: isSacred ? 0.45 : 0.08
       });
 
-      // 主幹與扭轉分枝
-      const mainTrunkGeo = new THREE.CylinderGeometry(0.42 * scale, 0.85 * scale, 4.2 * scale, 16);
-      const mainTrunk = new THREE.Mesh(mainTrunkGeo, trunkMat);
-      mainTrunk.position.y = 2.1 * scale;
+      mat.onBeforeCompile = (shader) => {
+        shader.uniforms.uTime = { value: 0 };
+        mat.userData.shader = shader;
+        shader.vertexShader = `
+          uniform float uTime;
+        ` + shader.vertexShader.replace(
+          '#include <begin_vertex>',
+          `
+          #include <begin_vertex>
+          vec4 wp = modelMatrix * vec4(transformed, 1.0);
+          float sway = sin(uTime * 1.8 + wp.x * 0.6 + wp.z * 0.6) * 0.14;
+          transformed.x += sway * smoothstep(0.0, 2.5, transformed.y);
+          `
+        );
+      };
+      windMaterials.push(mat);
+      return mat;
+    }
+
+    function buildDetailedTree({ x, z, scale = 1, trunkHex = 0x4a3321, leafHex = 0x2b6344, emissiveHex = 0x000000, emissiveInt = 0, isSacred = false }) {
+      const group = new THREE.Group();
+      const by = getEdenElevation(x, z);
+      group.position.set(x, by, z);
+
+      const trunkMat = new THREE.MeshStandardMaterial({
+        color: trunkHex, normalMap: barkPBR.normalMap, normalScale: new THREE.Vector2(1.2, 1.2),
+        roughness: isSacred ? 0.35 : 0.85, metalness: isSacred ? 0.55 : 0.05
+      });
+
+      // 盤根與主樹幹
+      for (let r = 0; r < 5; r++) {
+        const rAngle = (r / 5) * Math.PI * 2;
+        const root = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * scale, 0.42 * scale, 1.8 * scale, 12), trunkMat);
+        root.position.set(Math.cos(rAngle) * 0.55 * scale, 0.5 * scale, Math.sin(rAngle) * 0.55 * scale);
+        root.rotation.z = Math.cos(rAngle) * -0.5;
+        root.rotation.x = Math.sin(rAngle) * 0.5;
+        root.castShadow = true;
+        group.add(root);
+      }
+
+      const mainTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.46 * scale, 0.92 * scale, 4.5 * scale, 20), trunkMat);
+      mainTrunk.position.y = 2.25 * scale;
       mainTrunk.castShadow = true;
       mainTrunk.receiveShadow = true;
       group.add(mainTrunk);
 
-      const crownMat = new THREE.MeshStandardMaterial({
-        color: leafColor, emissive: emissive, emissiveIntensity: emissiveIntensity,
-        roughness: 0.4, metalness: isSacred ? 0.3 : 0.05
-      });
+      const leafMat = createWindFoliageMaterial(leafHex, emissiveHex, emissiveInt, isSacred);
+      const branches = isSacred ? 7 : 5; // 7 branches = Tabernacle Menorah archetype
 
-      const branchCount = isSacred ? 7 : 4; // 7 branches echoing the 7-branched Menorah (Wenham WBC)
-      const crownMeshes = [];
+      for (let b = 0; b < branches; b++) {
+        const bAngle = (b / branches) * Math.PI * 2;
+        const bTilt = 0.48 + (b % 2) * 0.18;
 
-      for (let b = 0; b < branchCount; b++) {
-        const bAngle = (b / branchCount) * Math.PI * 2;
-        const bTilt = 0.45 + (b % 2) * 0.2;
+        const pivot = new THREE.Group();
+        pivot.position.y = 3.8 * scale;
+        pivot.rotation.y = bAngle;
+        pivot.rotation.z = bTilt;
 
-        const branchPivot = new THREE.Group();
-        branchPivot.position.y = 3.6 * scale;
-        branchPivot.rotation.y = bAngle;
-        branchPivot.rotation.z = bTilt;
+        const bLen = (2.6 + (b % 3) * 0.45) * scale;
+        const limb = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * scale, 0.36 * scale, bLen, 14), trunkMat);
+        limb.position.y = bLen * 0.5;
+        limb.castShadow = true;
+        pivot.add(limb);
 
-        const bLen = (2.4 + (b % 3) * 0.4) * scale;
-        const bMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * scale, 0.34 * scale, bLen, 12), trunkMat);
-        bMesh.position.y = bLen / 2;
-        bMesh.castShadow = true;
-        branchPivot.add(bMesh);
-
-        // 樹冠葉團 (高細分二十面體有機變形)
-        const foliageGeo = new THREE.IcosahedronGeometry(1.75 * scale, 3);
-        const fPos = foliageGeo.attributes.position;
-        for (let k = 0; k < fPos.count; k++) {
-          const vx = fPos.getX(k), vy = fPos.getY(k), vz = fPos.getZ(k);
-          const n = 1 + 0.14 * Math.sin(vx * 2.5) * Math.cos(vy * 2.5);
-          fPos.setXYZ(k, vx * n, vy * 0.78 * n, vz * n);
+        const canopyGeo = new THREE.IcosahedronGeometry(1.85 * scale, 3);
+        const cPos = canopyGeo.attributes.position;
+        for (let k = 0; k < cPos.count; k++) {
+          const vx = cPos.getX(k), vy = cPos.getY(k), vz = cPos.getZ(k);
+          const n = 1.0 + 0.16 * Math.sin(vx * 2.2) * Math.cos(vz * 2.2);
+          cPos.setXYZ(k, vx * n, vy * 0.72 * n, vz * n);
         }
-        foliageGeo.computeVertexNormals();
+        canopyGeo.computeVertexNormals();
 
-        const foliage = new THREE.Mesh(foliageGeo, crownMat);
-        foliage.position.y = bLen + 0.5 * scale;
-        foliage.castShadow = true;
-        branchPivot.add(foliage);
-        crownMeshes.push(foliage);
+        const canopy = new THREE.Mesh(canopyGeo, leafMat);
+        canopy.position.y = bLen + 0.55 * scale;
+        canopy.castShadow = true;
+        canopy.receiveShadow = true;
+        pivot.add(canopy);
 
-        // 若為聖樹，懸掛發光果子 (Good for food & desirable to the eyes - Gen 2:9)
         if (isSacred) {
-          const fruitMat = new THREE.MeshStandardMaterial({
-            color: 0xffffff, emissive: emissive, emissiveIntensity: 2.2, roughness: 0.1
+          const fruitMat = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff, emissive: emissiveHex, emissiveIntensity: 2.8, roughness: 0.05, clearcoat: 1.0
           });
-          const fruit = new THREE.Mesh(new THREE.SphereGeometry(0.24 * scale, 16, 16), fruitMat);
-          fruit.position.set(0.4 * scale, bLen - 0.2 * scale, 0);
-          branchPivot.add(fruit);
+          const fruit = new THREE.Mesh(new THREE.SphereGeometry(0.25 * scale, 20, 20), fruitMat);
+          fruit.position.set(0.45 * scale, bLen - 0.15 * scale, 0);
+          pivot.add(fruit);
         }
-
-        group.add(branchPivot);
+        group.add(pivot);
       }
 
-      // 頂部中央主樹冠
-      const topCrown = new THREE.Mesh(new THREE.IcosahedronGeometry(2.3 * scale, 3), crownMat);
-      topCrown.position.y = 6.2 * scale;
-      topCrown.scale.y = 0.75;
-      topCrown.castShadow = true;
-      group.add(topCrown);
-      crownMeshes.push(topCrown);
+      const crownTop = new THREE.Mesh(new THREE.IcosahedronGeometry(2.45 * scale, 3), leafMat);
+      crownTop.position.y = 6.5 * scale;
+      crownTop.scale.y = 0.72;
+      crownTop.castShadow = true;
+      group.add(crownTop);
 
       scene.add(group);
-      animatedCrowns.push({ group, baseRot: Math.random() * 10 });
-      return { group, topCrown, baseY };
+      return { group, crownTop, by };
     }
 
-    // 1. 生命樹 (Tree of Life - 七枝金燈台原型, 園子中央偏北)
-    const treeOfLife = buildOrganicTree({
-      x: 0, z: -6.5, scale: 1.45,
-      trunkColor: 0x997a3d, leafColor: 0xffd700,
-      emissive: 0xffaa00, emissiveIntensity: 0.85, isSacred: true
+    // 1. 生命樹 (Tree of Life - 園子中央偏北 + 體積上帝光)
+    const treeOfLife = buildDetailedTree({
+      x: 0, z: -6.8, scale: 1.5,
+      trunkHex: 0xa68342, leafHex: 0xffd700,
+      emissiveHex: 0xffaa00, emissiveInt: 0.95, isSacred: true
     });
+    addGodRayCone(0, treeOfLife.by, -6.8, 0xffe082, 8.5, 32);
+
     interactables.push({
       type: 'treeOfLife',
       name: '生命樹 (Tree of Life / עֵץ הַחַיִּים)',
       note: 'treeOfLife',
-      mesh: treeOfLife.topCrown,
-      position: new THREE.Vector3(0, treeOfLife.baseY + 2.5, -6.5)
+      mesh: treeOfLife.crownTop,
+      position: new THREE.Vector3(0, treeOfLife.by + 2.5, -6.8)
     });
 
     // 2. 分辨善惡樹 (Tree of Knowledge of Good and Bad - 園子中央偏南)
-    const treeOfKnow = buildOrganicTree({
-      x: 0, z: 7.2, scale: 1.35,
-      trunkColor: 0x2c1b18, leafColor: 0x880e4f,
-      emissive: 0xd81b60, emissiveIntensity: 0.65, isSacred: true
+    const treeOfKnow = buildDetailedTree({
+      x: 0, z: 7.4, scale: 1.38,
+      trunkHex: 0x2b1916, leafHex: 0x7b0d3e,
+      emissiveHex: 0xe8175d, emissiveInt: 0.75, isSacred: true
     });
+    addGodRayCone(0, treeOfKnow.by, 7.4, 0xff5252, 6.5, 26);
+
     interactables.push({
       type: 'treeOfKnowledge',
       name: '知善惡樹 (Tree of Knowledge of Good and Bad / עֵץ הַדַּעַת)',
       note: 'treeOfKnowledge',
-      mesh: treeOfKnow.topCrown,
-      position: new THREE.Vector3(0, treeOfKnow.baseY + 2.5, 7.2)
+      mesh: treeOfKnow.crownTop,
+      position: new THREE.Vector3(0, treeOfKnow.by + 2.5, 7.4)
     });
 
-    // 3. 伊甸原始森林 (Gen 2:9 - 悅人眼目、好作食物的各樣樹木)
-    const leafPalettes = [0x1b4332, 0x2d6a4f, 0x40916c, 0x52b788, 0x74c69d, 0xd4a373];
-    for (let i = 0; i < 68; i++) {
-      const radius = 19 + Math.random() * 36;
+    // 3. 伊甸茂密原始森林 (Gen 2:9, 15 - 75 棵高細節有機樹木與森林光束)
+    const forestLeafColors = [0x1b4332, 0x23533d, 0x2d6a4f, 0x40916c, 0x52b788, 0xc89d66];
+    for (let i = 0; i < 75; i++) {
+      const radius = 19.5 + Math.random() * 38;
       const theta = Math.random() * Math.PI * 2;
       const x = Math.cos(theta) * radius;
       const z = Math.sin(theta) * radius;
+      if (Math.min(Math.abs(x), Math.abs(z)) < 5.5) continue;
 
-      // 避開四條河道
-      if (Math.min(Math.abs(x), Math.abs(z)) < 5.2) continue;
-
-      const scale = 0.75 + Math.random() * 0.7;
-      const leafCol = leafPalettes[i % leafPalettes.length];
-      buildOrganicTree({ x, z, scale, leafColor: leafCol });
+      const scale = 0.75 + Math.random() * 0.75;
+      const lCol = forestLeafColors[i % forestLeafColors.length];
+      const t = buildDetailedTree({ x, z, scale, leafHex: lCol });
+      if (i % 14 === 0) addGodRayCone(x, t.by, z, 0xfff3d1, 5.5, 24);
     }
 
     // ==========================================
-    // 8. GPU 實例化草地與上騰水霧粒子 (Instanced Grass & Mist Particles)
+    // 7. 30,000 株 GPU 實例化次表面散射草叢與上騰霧氣 (GPU Instanced Foliage & Mist)
     // ==========================================
-    const grassCount = 12000;
-    const bladeGeo = new THREE.ConeGeometry(0.08, 0.65, 4);
-    bladeGeo.translate(0, 0.32, 0);
-    const bladeMat = new THREE.MeshStandardMaterial({ color: 0x3b7a57, roughness: 0.6 });
-    const grassInstanced = new THREE.InstancedMesh(bladeGeo, bladeMat, grassCount);
+    const grassCount = 30000;
+    const grassGeo = new THREE.ConeGeometry(0.075, 0.75, 4);
+    grassGeo.translate(0, 0.375, 0);
+
+    const grassMat = new THREE.MeshStandardMaterial({
+      color: 0x3b7a4a, roughness: 0.55, metalness: 0.05
+    });
+    grassMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = { value: 0 };
+      grassMat.userData.shader = shader;
+      shader.vertexShader = `
+        uniform float uTime;
+      ` + shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        `
+        #include <begin_vertex>
+        vec4 wp = instanceMatrix * vec4(transformed, 1.0);
+        float wind = sin(uTime * 2.6 + wp.x * 0.45 + wp.z * 0.45) * 0.22;
+        transformed.x += wind * transformed.y;
+        `
+      );
+    };
+    windMaterials.push(grassMat);
+
+    const grassInstanced = new THREE.InstancedMesh(grassGeo, grassMat, grassCount);
     grassInstanced.receiveShadow = true;
 
     const dummy = new THREE.Object3D();
-    let idx = 0;
+    const gColor = new THREE.Color();
     for (let i = 0; i < grassCount; i++) {
-      const r = Math.sqrt(Math.random()) * 56;
+      const r = Math.sqrt(Math.random()) * 58;
       const theta = Math.random() * Math.PI * 2;
       const gx = Math.cos(theta) * r;
       const gz = Math.sin(theta) * r;
-      if (r > 3.5 && Math.min(Math.abs(gx), Math.abs(gz)) < 3.6) continue;
+      if (r > 3.5 && Math.min(Math.abs(gx), Math.abs(gz)) < 4.1) continue;
 
       const gy = getEdenElevation(gx, gz);
       dummy.position.set(gx, gy, gz);
-      dummy.rotation.set((Math.random() - 0.5) * 0.3, Math.random() * Math.PI, (Math.random() - 0.5) * 0.3);
-      const s = 0.6 + Math.random() * 0.9;
-      dummy.scale.set(s, s, s);
+      dummy.rotation.set((Math.random() - 0.5) * 0.25, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.25);
+      const s = 0.55 + Math.random() * 0.95;
+      dummy.scale.set(s, s * (0.8 + Math.random() * 0.5), s);
       dummy.updateMatrix();
-      grassInstanced.setMatrixAt(idx++, dummy.matrix);
+      grassInstanced.setMatrixAt(i, dummy.matrix);
+
+      gColor.setHex(0x2d6a4f).lerp(new THREE.Color(0x74c69d), Math.random() * 0.65);
+      grassInstanced.setColorAt(i, gColor);
     }
     scene.add(grassInstanced);
 
-    // 上騰的霧氣與神聖微粒 (Gen 2:6 ʾēd mist)
-    const particleCount = 1500;
-    const pGeo = new THREE.BufferGeometry();
-    const pPositions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      const r = Math.random() * 62;
+    // 上騰水霧與神聖微粒 (Gen 2:6 ʾēd mist)
+    const mistCount = 2000;
+    const mistGeo = new THREE.BufferGeometry();
+    const mistPos = new Float32Array(mistCount * 3);
+    for (let i = 0; i < mistCount; i++) {
+      const r = Math.random() * 64;
       const t = Math.random() * Math.PI * 2;
       const px = Math.cos(t) * r;
       const pz = Math.sin(t) * r;
-      const py = getEdenElevation(px, pz) + 0.5 + Math.random() * 10;
-      pPositions[i * 3] = px;
-      pPositions[i * 3 + 1] = py;
-      pPositions[i * 3 + 2] = pz;
+      mistPos[i * 3] = px;
+      mistPos[i * 3 + 1] = getEdenElevation(px, pz) + 0.4 + Math.random() * 11;
+      mistPos[i * 3 + 2] = pz;
     }
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
-    const pMat = new THREE.PointsMaterial({
-      color: 0xffeaa7, size: 0.16, transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending
+    mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
+    const mistMat = new THREE.PointsMaterial({
+      color: 0xffeaa7, size: 0.14, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending
     });
-    const mistParticles = new THREE.Points(pGeo, pMat);
-    scene.add(mistParticles);
+    const mistSystem = new THREE.Points(mistGeo, mistMat);
+    scene.add(mistSystem);
 
     // ==========================================
-    // 9. 有機雕塑活物、沉睡之石與東門基路伯 (Creatures, Tardemah & Cherubim)
+    // 8. 高擬真多關節解剖雕塑活物 (Articulated Anatomical Fauna - Gen 2:19-20)
     // ==========================================
-    function buildSculptedCreature(x, z, colorHex, hebName) {
-      const group = new THREE.Group();
-      const mat = new THREE.MeshStandardMaterial({
-        color: colorHex, roughness: 0.35, metalness: 0.15
+    function createArticulatedAnimal({ species, hebName, x, z, colorHex, accentHex }) {
+      const root = new THREE.Group();
+      const furMat = new THREE.MeshStandardMaterial({
+        color: colorHex, normalMap: groundPBR.normalMap, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 0.45
+      });
+      const accentMat = new THREE.MeshStandardMaterial({
+        color: accentHex, roughness: 0.35, metalness: 0.2
       });
 
-      // 流線型軀幹 (CapsuleGeometry)
-      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 1.3, 16, 24), mat);
-      torso.rotation.x = Math.PI / 2;
-      torso.position.y = 1.25;
-      torso.castShadow = true;
-      group.add(torso);
+      // 胸腔與腹腔 (Ribcage & Pelvis)
+      const chest = new THREE.Mesh(new THREE.SphereGeometry(0.62, 24, 24), furMat);
+      chest.scale.set(0.95, 1.05, 1.35);
+      chest.position.set(0, 1.35, 0.45);
+      chest.castShadow = true;
+      root.add(chest);
 
-      // 頸部與頭部
-      const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.7, 12, 16), mat);
-      neck.position.set(0, 1.85, 0.85);
-      neck.rotation.x = -0.35;
-      group.add(neck);
+      const abdomen = new THREE.Mesh(new THREE.SphereGeometry(0.54, 24, 24), furMat);
+      abdomen.scale.set(0.9, 0.95, 1.3);
+      abdomen.position.set(0, 1.3, -0.45);
+      abdomen.castShadow = true;
+      root.add(abdomen);
 
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.42, 24, 24), mat);
-      head.scale.set(0.85, 0.9, 1.35);
-      head.position.set(0, 2.35, 1.15);
-      group.add(head);
+      // 頸部與頭部樞紐 (Neck & Head Pivot)
+      const headPivot = new THREE.Group();
+      headPivot.position.set(0, 1.65, 0.95);
 
-      // 四肢
-      const legGeo = new THREE.CapsuleGeometry(0.16, 0.9, 8, 12);
-      [[-0.35, 0.6], [0.35, 0.6], [-0.35, -0.6], [0.35, -0.6]].forEach(([lx, lz]) => {
-        const leg = new THREE.Mesh(legGeo, mat);
-        leg.position.set(lx, 0.55, lz);
-        leg.castShadow = true;
-        group.add(leg);
+      const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.65, 16, 16), furMat);
+      neck.rotation.x = -0.4;
+      headPivot.add(neck);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 24, 24), furMat);
+      head.scale.set(0.9, 0.9, 1.35);
+      head.position.set(0, 0.55, 0.35);
+      headPivot.add(head);
+
+      // 物種專屬解剖細節 (獅子鬃毛 / 雄鹿分叉鹿角 / 飛鷹雙翼)
+      if (species === 'lion') {
+        const mane = new THREE.Mesh(new THREE.DodecahedronGeometry(0.62, 2), accentMat);
+        mane.position.set(0, 0.38, 0.15);
+        headPivot.add(mane);
+      } else if (species === 'stag') {
+        [-0.22, 0.22].forEach(side => {
+          const antler = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.06, 0.95, 8), accentMat);
+          antler.position.set(side, 1.05, 0.25);
+          antler.rotation.z = side > 0 ? -0.45 : 0.45;
+          antler.rotation.x = -0.25;
+          headPivot.add(antler);
+        });
+      } else if (species === 'eagle') {
+        [-0.65, 0.65].forEach(side => {
+          const wing = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.85), accentMat);
+          wing.position.set(side, 1.65, 0.1);
+          wing.rotation.z = side > 0 ? 0.35 : -0.35;
+          root.add(wing);
+        });
+      }
+
+      root.add(headPivot);
+
+      // 四肢關節樞紐 (Articulated Legs)
+      const legs = [];
+      const legOffsets = [[-0.36, 0.65], [0.36, 0.65], [-0.34, -0.65], [0.34, -0.65]];
+      legOffsets.forEach(([lx, lz]) => {
+        const legPivot = new THREE.Group();
+        legPivot.position.set(lx, 1.15, lz);
+        const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.55, 12, 12), furMat);
+        upperLeg.position.y = -0.3;
+        const lowerLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.55, 12), accentMat);
+        lowerLeg.position.y = -0.8;
+        legPivot.add(upperLeg, lowerLeg);
+        root.add(legPivot);
+        legs.push(legPivot);
       });
-
-      // 生命氣息光環 (Nepeš Ḥayyâ Halo)
-      const halo = new THREE.Mesh(
-        new THREE.TorusGeometry(0.45, 0.03, 12, 32),
-        new THREE.MeshBasicMaterial({ color: 0xffeaa7 })
-      );
-      halo.rotation.x = Math.PI / 2;
-      halo.position.set(0, 2.95, 1.15);
-      group.add(halo);
 
       const by = getEdenElevation(x, z);
-      group.position.set(x, by, z);
-      scene.add(group);
+      root.position.set(x, by, z);
+      scene.add(root);
 
-      const item = {
+      const obj = {
         type: 'animal',
         name: `未命名的活物 (Nepeš Ḥayyâ)`,
-        hebName: hebName,
+        hebName,
         note: 'namingAnimal',
-        mesh: group,
+        mesh: root,
+        headPivot,
+        legs,
         position: new THREE.Vector3(x, by + 1.5, z),
-        named: false
+        named: false,
+        phase: Math.random() * 10
       };
-      interactables.push(item);
+      faunaList.push(obj);
+      interactables.push(obj);
     }
 
-    buildSculptedCreature(-22, -19, 0xe1b12c, "אַרְיֵה (ʾAryēh - 獅子)");
-    buildSculptedCreature(24, -23, 0xdfe4ea, "נֶשֶׁר (Nešer - 飛鷹)");
-    buildSculptedCreature(-23, 22, 0xd980fa, "אַיָּל (ʾAyyāl - 鹿)");
+    createArticulatedAnimal({ species: 'lion', hebName: "אַרְיֵה (ʾAryēh - 獅子)", x: -23, z: -20, colorHex: 0xd49b35, accentHex: 0x6e4715 });
+    createArticulatedAnimal({ species: 'eagle', hebName: "נֶשֶׁר (Nešer - 飛鷹)", x: 25, z: -24, colorHex: 0xf1f2f6, accentHex: 0xd4af37 });
+    createArticulatedAnimal({ species: 'stag', hebName: "אַיָּל (ʾAyyāl - 雄鹿)", x: -24, z: 23, colorHex: 0x9c6644, accentHex: 0xe6ccb2 });
 
     // 沉睡之石祭壇 (Tardēmâ Altar - Gen 2:21-22)
-    const tardemahX = -8.5, tardemahZ = 0;
-    const tardemahY = getEdenElevation(tardemahX, tardemahZ);
-    const tardemahStone = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.6, 2.0, 0.75, 32),
-      new THREE.MeshPhysicalMaterial({ color: 0xf5f6fa, roughness: 0.15, clearcoat: 0.8 })
+    const tardX = -9.0, tardZ = 0;
+    const tardY = getEdenElevation(tardX, tardZ);
+    const tardStone = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.75, 2.15, 0.85, 32),
+      new THREE.MeshPhysicalMaterial({
+        color: 0xf5f6fa, normalMap: groundPBR.normalMap, roughness: 0.12, clearcoat: 0.9, envMapIntensity: 1.5
+      })
     );
-    tardemahStone.position.set(tardemahX, tardemahY + 0.35, tardemahZ);
-    tardemahStone.castShadow = true;
-    scene.add(tardemahStone);
+    tardStone.position.set(tardX, tardY + 0.4, tardZ);
+    tardStone.castShadow = true;
+    scene.add(tardStone);
 
     interactables.push({
       type: 'tardemah',
       name: '沉睡之石 (Tardēmâ / תַּרְדֵּמָה - 建造幫助者 ʿĒzer)',
       note: 'tardemahEzer',
-      mesh: tardemahStone,
-      position: new THREE.Vector3(tardemahX, tardemahY + 1.2, tardemahZ),
+      mesh: tardStone,
+      position: new THREE.Vector3(tardX, tardY + 1.2, tardZ),
       completed: false
     });
 
     // 東門基路伯與四面轉動發火焰的劍 (Cherubim & Whirling Flame Sword - Gen 3:24)
     cherubimConstruct = new THREE.Group();
-    const flameMat = new THREE.MeshStandardMaterial({
-      color: 0xff3838, emissive: 0xff2200, emissiveIntensity: 3.5, roughness: 0.1
+    const fireSwordMat = new THREE.MeshStandardMaterial({
+      color: 0xff3838, emissive: 0xff2200, emissiveIntensity: 4.2, roughness: 0.1
     });
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.18, 16, 64), flameMat);
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.18, 16, 64), flameMat);
-    ring2.rotation.x = Math.PI / 2;
-    const swordCore = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 0), flameMat);
-    cherubimConstruct.add(ring1, ring2, swordCore);
-    cherubimConstruct.position.set(58, getEdenElevation(58, 0) + 5.5, 0);
+    const cRing1 = new THREE.Mesh(new THREE.TorusGeometry(4.6, 0.2, 16, 64), fireSwordMat);
+    const cRing2 = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.2, 16, 64), fireSwordMat);
+    cRing2.rotation.x = Math.PI / 2;
+    const cBlade = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 1), fireSwordMat);
+    cherubimConstruct.add(cRing1, cRing2, cBlade);
+    cherubimConstruct.position.set(60, getEdenElevation(60, 0) + 6.0, 0);
     cherubimConstruct.visible = false;
     scene.add(cherubimConstruct);
 
     // ==========================================
-    // 10. 第一人稱物理移動與祭司互動系統 (Player & Interactions)
+    // 9. 第一人稱物理移動與祭司職分互動
     // ==========================================
     const player = {
       pos: new THREE.Vector3(0, getEdenElevation(0, 14) + 1.85, 14),
       yaw: 0,
       pitch: 0,
-      baseSpeed: 12,
+      baseSpeed: 12.5,
       bobTimer: 0
     };
     const keys = {};
+
+    const toggleSSAOBtn = document.getElementById('toggle-ssao');
+    function toggleSSAO() {
+      state.ssaoEnabled = !state.ssaoEnabled;
+      ssaoPass.enabled = state.ssaoEnabled;
+      toggleSSAOBtn.textContent = state.ssaoEnabled ? 'SSAO: 開啟 (Ultra)' : 'SSAO: 關閉 (High FPS)';
+    }
+    toggleSSAOBtn.addEventListener('click', toggleSSAO);
 
     document.addEventListener('keydown', (e) => {
       keys[e.code] = true;
       if (e.code === 'KeyE' && state.isPlaying) handleInteract('E');
       if (e.code === 'KeyR' && state.isPlaying) handleInteract('R');
+      if (e.code === 'KeyP') toggleSSAO();
     });
     document.addEventListener('keyup', (e) => keys[e.code] = false);
 
@@ -938,8 +1300,8 @@
 
       if (target.type === 'treeOfLife' && key === 'E') {
         state.hayyim = 100;
-        bloomPass.strength = 1.35; // 領受生命果時的短暫神聖光輝脈衝
-        setTimeout(() => { if (!state.isExiled) bloomPass.strength = 0.75; }, 600);
+        bloomPass.strength = 1.45;
+        setTimeout(() => { if (!state.isExiled) bloomPass.strength = 0.65; }, 650);
         updateLog('treeOfLife');
         updateHUD();
       }
@@ -956,7 +1318,7 @@
         target.completed = true;
         target.mesh.material.color.setHex(0xffd700);
         target.mesh.material.emissive.setHex(0xffaa00);
-        target.mesh.material.emissiveIntensity = 2.5;
+        target.mesh.material.emissiveIntensity = 3.0;
         state.riversTended++;
         state.tasksCompleted++;
         updateLog(target.note);
@@ -974,16 +1336,16 @@
 
       if (target.type === 'tardemah' && key === 'E' && !target.completed) {
         if (state.animalsNamed < 3) {
-          document.getElementById('log-title').textContent = "【條件未滿足】創世記 2:20";
-          document.getElementById('log-body').textContent = "請先為園中的 3 隻活物命名（經歷『只是那人沒有找到相配的幫助者』），再回到沉睡之石。";
+          document.getElementById('ex-title').textContent = "【條件未滿足】創世記 2:20";
+          document.getElementById('ex-body').textContent = "請先為園中的 3 隻活物命名（經歷『只是那人沒有找到相配的幫助者』），再回到沉睡之石。";
           return;
         }
         target.completed = true;
         state.hasEzer = true;
         state.tasksCompleted++;
         spawnEzerCompanion();
-        document.getElementById('companion-status').textContent = "狀態：已與幫助者同工 (ʿēzer kənegdô / עֵזֶר כְּנֶגְדּוֹ)";
-        document.getElementById('companion-status').style.color = "#55efc4";
+        document.getElementById('comp-text').textContent = "狀態：已與幫助者同工 (ʿēzer kənegdô / עֵזֶר כְּנֶגְדּוֹ)";
+        document.getElementById('comp-text').style.color = "#2ed573";
         updateLog('tardemahEzer');
         updateHUD();
       }
@@ -991,17 +1353,19 @@
 
     function spawnEzerCompanion() {
       const group = new THREE.Group();
-      const mat = new THREE.MeshPhysicalMaterial({
-        color: 0xffeaa7, emissive: 0xd4af37, emissiveIntensity: 0.45, roughness: 0.2, clearcoat: 1.0
+      const robeMat = new THREE.MeshPhysicalMaterial({
+        color: 0xffeaa7, emissive: 0xd4af37, emissiveIntensity: 0.4, roughness: 0.18, clearcoat: 1.0
       });
-      const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.38, 1.1, 16, 24), mat);
-      body.position.y = 1.0;
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 24), mat);
-      head.position.y = 1.95;
-      group.add(body, head);
+      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.38, 1.15, 16, 24), robeMat);
+      torso.position.y = 1.05;
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 24), robeMat);
+      head.position.y = 2.0;
+      const crown = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.04, 12, 32), goldPBRMat);
+      crown.rotation.x = Math.PI / 2;
+      crown.position.y = 2.35;
+      group.add(torso, head, crown);
 
-      const by = getEdenElevation(tardemahX, tardemahZ);
-      group.position.set(tardemahX + 2, by, tardemahZ);
+      group.position.set(tardX + 2.2, tardY, tardZ);
       scene.add(group);
       ezerMesh = group;
     }
@@ -1010,46 +1374,45 @@
       state.isExiled = true;
       updateLog('exile');
 
-      // 傳送至伊甸園東邊曠野 (Gen 3:24 - East of Eden / Miqqedem)
-      player.pos.set(74, getEdenElevation(74, 0) + 1.85, 0);
+      player.pos.set(76, getEdenElevation(76, 0) + 1.85, 0);
       player.yaw = Math.PI / 2;
 
-      // 改變大氣散射為審判黃昏並啟動基路伯旋轉火焰劍
-      setSunElevation(2, 90);
-      skyUniforms['turbidity'].value = 18;
-      skyUniforms['rayleigh'].value = 3.5;
-      scene.fog.color.setHex(0x2a0f0f);
+      skyUniforms['turbidity'].value = 19;
+      skyUniforms['rayleigh'].value = 3.8;
+      updateAtmosphere(1.5, 90);
+      scene.fog.color.setHex(0x280d0d);
       cherubimConstruct.visible = true;
-      bloomPass.strength = 1.4;
+      bloomPass.strength = 1.45;
+      lensPass.uniforms.uChromatic.value = 0.0055;
 
       document.exitPointerLock();
       overlay.style.display = 'flex';
-      document.getElementById('overlay-content').innerHTML = `
-        <h2 style="color:#ff5252;">גֵּרַשׁ אֶת־הָאָדָם | 放逐出伊甸聖所 (創世記 3:22–24)</h2>
+      document.getElementById('modal-content').innerHTML = `
+        <h2 style="color:#ff4757;">גֵּרַשׁ אֶת־הָאָדָם | 放逐出伊甸聖所 (創世記 3:22–24)</h2>
         <p>
-          你伸手摘取了「分辨善惡樹」的果子，選擇自行定義善惡的道德主權，違背了聖所祭司的順服之約。
+          你伸手摘取了「分辨善惡樹」的果子，選擇自行定義善惡的道德標準，背離了聖所祭司的順服之約。
         </p>
         <p>
           <strong>經文應驗（Gen 3:24）：</strong><br>
           「於是把他趕出去了；又在伊甸園的東邊（<i>miqqedem</i>），安設基路伯和四面轉動發火焰的劍，要把守生命樹的道路。」<br>
           失去生命樹的持續更新後，人必須在園外的地土（<i>ʾădāmâ</i>）上汗流滿面才得糊口，直到歸回塵土。
         </p>
-        <button class="btn" onclick="location.reload()">重新開始聖所試煉</button>
+        <button class="primary-btn" onclick="location.reload()">重新開始聖所試煉</button>
       `;
     }
 
     function updateHUD() {
-      document.getElementById('val-hayyim').textContent = `${Math.round(state.hayyim)}%`;
-      document.getElementById('bar-hayyim').style.width = `${state.hayyim}%`;
+      document.getElementById('txt-hayyim').textContent = `${Math.round(state.hayyim)}%`;
+      document.getElementById('fill-hayyim').style.width = `${state.hayyim}%`;
 
-      document.getElementById('val-shamar').textContent = `${state.tasksCompleted} / ${state.totalTasks}`;
-      document.getElementById('bar-shamar').style.width = `${(state.tasksCompleted / state.totalTasks) * 100}%`;
+      document.getElementById('txt-shamar').textContent = `${state.tasksCompleted} / ${state.totalTasks}`;
+      document.getElementById('fill-shamar').style.width = `${(state.tasksCompleted / state.totalTasks) * 100}%`;
 
       const dist = Math.sqrt(player.pos.x ** 2 + player.pos.z ** 2);
-      const locEl = document.getElementById('location-status');
-      if (dist < 17.5) {
-        locEl.textContent = "當前區域：中央至聖所高台 (Holy of Holies - 生命樹與活水源頭)";
-      } else if (dist < 58) {
+      const locEl = document.getElementById('loc-text');
+      if (dist < 17.8) {
+        locEl.textContent = "當前區域：中央至聖所高台 (Holy of Holies Summit - 生命樹與活水源頭)";
+      } else if (dist < 60) {
         locEl.textContent = "當前區域：伊甸園森林台地 (Garden Sanctuary - 四道河流域)";
       } else {
         locEl.textContent = "當前區域：園外地土曠野 (Outside Eden - ʾădāmâ)";
@@ -1057,7 +1420,7 @@
     }
 
     // ==========================================
-    // 11. 主渲染迴圈 (Animation & Shader Loop)
+    // 10. 主渲染與物理迴圈 (Main Loop)
     // ==========================================
     let prevTime = performance.now();
 
@@ -1067,41 +1430,49 @@
       prevTime = now;
       const elapsed = now * 0.001;
 
-      // 更新水體 Shader 時間
       waterUniforms.uTime.value = elapsed;
+      lensPass.uniforms.uTime.value = elapsed;
 
-      // 樹木微風擺動與祭壇水晶旋轉
-      animatedCrowns.forEach(item => {
-        item.group.rotation.z = Math.sin(elapsed * 1.2 + item.baseRot) * 0.018;
+      windMaterials.forEach(mat => {
+        if (mat.userData.shader) mat.userData.shader.uniforms.uTime.value = elapsed;
       });
+
+      // 活物呼吸與頭部轉動動畫
+      faunaList.forEach(f => {
+        f.headPivot.rotation.y = Math.sin(elapsed * 1.1 + f.phase) * 0.32;
+        f.headPivot.rotation.x = Math.cos(elapsed * 0.8 + f.phase) * 0.08;
+        f.legs.forEach((leg, idx) => {
+          leg.rotation.x = Math.sin(elapsed * 1.5 + f.phase + idx) * 0.06;
+        });
+      });
+
       interactables.forEach(item => {
         if (item.type === 'river') {
           item.mesh.rotation.y += dt * 1.4;
-          item.mesh.position.y = 2.0 + Math.sin(elapsed * 2.5) * 0.2;
+          item.mesh.position.y = 2.2 + Math.sin(elapsed * 2.4) * 0.22;
         }
       });
 
-      // 上騰霧氣粒子緩慢上升 (Gen 2:6)
-      const pArr = mistParticles.geometry.attributes.position.array;
-      for (let i = 1; i < pArr.length; i += 3) {
-        pArr[i] += dt * 0.45;
-        if (pArr[i] > 18) pArr[i] = 3.5;
+      // 上騰水霧粒子更新
+      const mArr = mistSystem.geometry.attributes.position.array;
+      for (let i = 1; i < mArr.length; i += 3) {
+        mArr[i] += dt * 0.42;
+        if (mArr[i] > 19) mArr[i] = 3.8;
       }
-      mistParticles.geometry.attributes.position.needsUpdate = true;
+      mistSystem.geometry.attributes.position.needsUpdate = true;
 
-      // 東門基路伯四面轉動火焰劍 (Gen 3:24 Whirling Sword)
       if (cherubimConstruct && cherubimConstruct.visible) {
-        cherubimConstruct.children[0].rotation.x += dt * 3.5;
-        cherubimConstruct.children[0].rotation.y += dt * 2.2;
-        cherubimConstruct.children[1].rotation.y -= dt * 4.0;
-        cherubimConstruct.children[2].rotation.z += dt * 5.0;
+        cherubimConstruct.children[0].rotation.x += dt * 3.8;
+        cherubimConstruct.children[0].rotation.y += dt * 2.5;
+        cherubimConstruct.children[1].rotation.y -= dt * 4.2;
+        cherubimConstruct.children[2].rotation.z += dt * 5.5;
       }
 
       if (state.isPlaying && !state.isExiled) {
-        const drainRate = state.hasEzer ? 0.55 : 1.1;
+        const drainRate = state.hasEzer ? 0.5 : 1.05;
         state.hayyim = Math.max(0, state.hayyim - drainRate * dt);
         if (state.hayyim <= 0) {
-          state.hayyim = 30;
+          state.hayyim = 35;
           player.pos.set(0, getEdenElevation(0, 0) + 1.85, 0);
           updateLog('treeOfLife');
         }
@@ -1116,18 +1487,17 @@
         if (keys['KeyA']) moveDir.sub(right);
 
         const isMoving = moveDir.lengthSq() > 0;
-        const currentSpeed = (keys['ShiftLeft'] || keys['ShiftRight']) ? player.baseSpeed * 1.65 : player.baseSpeed;
+        const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? player.baseSpeed * 1.65 : player.baseSpeed;
 
         if (isMoving) {
           moveDir.normalize();
-          player.pos.addScaledVector(moveDir, currentSpeed * dt);
-          player.bobTimer += dt * (currentSpeed * 0.85);
+          player.pos.addScaledVector(moveDir, speed * dt);
+          player.bobTimer += dt * (speed * 0.85);
         } else {
           player.bobTimer = 0;
         }
 
-        // 邊界限制與連續高度貼合
-        const maxR = 92;
+        const maxR = 88;
         const currR = Math.sqrt(player.pos.x ** 2 + player.pos.z ** 2);
         if (currR > maxR) {
           player.pos.x *= maxR / currR;
@@ -1135,21 +1505,19 @@
         }
 
         const groundY = getEdenElevation(player.pos.x, player.pos.z);
-        const headBob = isMoving ? Math.sin(player.bobTimer) * 0.08 : 0;
-        const targetY = groundY + 1.85 + headBob;
+        const bobOffset = isMoving ? Math.sin(player.bobTimer) * 0.075 : 0;
+        const targetY = groundY + 1.85 + bobOffset;
         player.pos.y += (targetY - player.pos.y) * 12 * dt;
 
         camera.position.copy(player.pos);
         camera.quaternion.setFromEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
 
-        // 幫助者 (Ezer) 平滑跟隨並貼合地形
         if (ezerMesh) {
-          const targetPos = new THREE.Vector3(player.pos.x - 2.6, 0, player.pos.z - 2.6);
-          targetPos.y = getEdenElevation(targetPos.x, targetPos.z);
-          ezerMesh.position.lerp(targetPos, dt * 3.0);
+          const targetCompanion = new THREE.Vector3(player.pos.x - 2.6, 0, player.pos.z - 2.6);
+          targetCompanion.y = getEdenElevation(targetCompanion.x, targetCompanion.z);
+          ezerMesh.position.lerp(targetCompanion, dt * 3.2);
         }
 
-        // 偵測互動目標
         let closest = null;
         let minDist = 7.8;
         for (const item of interactables) {
@@ -1161,34 +1529,36 @@
         }
         state.currentTarget = closest;
 
-        const promptEl = document.getElementById('interaction-prompt');
+        const promptBox = document.getElementById('prompt-box');
+        const reticle = document.getElementById('reticle');
         if (closest) {
-          promptEl.style.display = 'block';
+          promptBox.style.display = 'block';
+          reticle.style.transform = 'scale(1.8)';
           if (closest.type === 'treeOfLife') {
-            promptEl.innerHTML = `${closest.name}<br><span class="key-hint">E</span> 領受生命樹果子更新生命 (Hayyim +100%)`;
+            promptBox.innerHTML = `${closest.name}<br><span class="k-badge">E</span> 領受生命樹果子更新生命 (Hayyim +100%)`;
           } else if (closest.type === 'treeOfKnowledge') {
-            promptEl.innerHTML = `${closest.name}<br><span class="key-hint">E</span> 敬畏順服神定秩序 | <span class="key-hint" style="background:#ff5252;color:#fff;">R</span> 摘取禁果 (自主定義善惡)`;
+            promptBox.innerHTML = `${closest.name}<br><span class="k-badge">E</span> 敬畏順服神定秩序 | <span class="k-badge" style="background:#ff4757;color:#fff;">R</span> 摘取禁果 (自主定義善惡)`;
           } else if (closest.type === 'river') {
-            promptEl.innerHTML = closest.completed
+            promptBox.innerHTML = closest.completed
               ? `${closest.name} (已完成看守)`
-              : `${closest.name}<br><span class="key-hint">E</span> 執行祭司事奉與看守 (ʿābad & šāmar)`;
+              : `${closest.name}<br><span class="k-badge">E</span> 執行祭司事奉與看守 (ʿābad & šāmar)`;
           } else if (closest.type === 'animal') {
-            promptEl.innerHTML = closest.named
+            promptBox.innerHTML = closest.named
               ? `${closest.name}`
-              : `${closest.name}<br><span class="key-hint">E</span> 以希伯來文賦予名稱 (${closest.hebName})`;
+              : `${closest.name}<br><span class="k-badge">E</span> 以希伯來文賦予名稱 (${closest.hebName})`;
           } else if (closest.type === 'tardemah') {
-            promptEl.innerHTML = closest.completed
+            promptBox.innerHTML = closest.completed
               ? `${closest.name} (已建造幫助者)`
-              : `${closest.name}<br><span class="key-hint">E</span> 進入沉睡 (Tardēmâ) 建造幫助者 (需先命名 3 隻活物)`;
+              : `${closest.name}<br><span class="k-badge">E</span> 進入沉睡 (Tardēmâ) 建造幫助者 (需先命名 3 隻活物)`;
           }
         } else {
-          promptEl.style.display = 'none';
+          promptBox.style.display = 'none';
+          reticle.style.transform = 'scale(1.0)';
         }
 
         updateHUD();
       }
 
-      // 透過 EffectComposer 執行含 HDR Bloom 的渲染
       composer.render();
     }
 
