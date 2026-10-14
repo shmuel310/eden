@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GAN EDEN: Next-Gen PBR & Atmospheric Sanctuary</title>
+  <title>GAN EDEN & MIQQEDEM: Sanctuary and Exile (Genesis 2-3)</title>
   <style>
     :root {
-      --bg-hud: rgba(8, 12, 16, 0.72);
+      --bg-hud: rgba(8, 12, 16, 0.76);
       --border-gold: rgba(218, 180, 88, 0.55);
       --gold-accent: #f5d17e;
       --text-primary: #f4f3ef;
@@ -21,51 +21,78 @@
 
     /* Cinematic Letterbox Bars */
     .letterbox {
-      position: fixed; left: 0; width: 100%; height: 28px;
-      background: #000; z-index: 5; pointer-events: none;
+      position: fixed; left: 0; width: 100%; height: 30px;
+      background: #000; z-index: 15; pointer-events: none;
+      transition: height 0.8s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .letterbox.top { top: 0; }
     .letterbox.bottom { bottom: 0; }
+    body.cutscene-mode .letterbox { height: 95px; }
+
+    /* Cutscene Dramatic Subtitle Overlay */
+    #cutscene-banner {
+      position: fixed; inset: 0; pointer-events: none; z-index: 25;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      background: radial-gradient(circle, rgba(40, 5, 5, 0.35), rgba(0, 0, 0, 0.88));
+      opacity: 0; transition: opacity 1.0s ease; padding: 40px; text-align: center;
+    }
+    #cutscene-heb {
+      font-size: 2.2rem; color: #ff6b6b; letter-spacing: 3px; margin-bottom: 12px;
+      text-shadow: 0 0 25px rgba(255, 71, 87, 0.85);
+    }
+    #cutscene-title {
+      font-size: 1.5rem; color: var(--gold-accent); font-weight: bold; margin-bottom: 16px; letter-spacing: 2px;
+    }
+    #cutscene-desc {
+      max-width: 720px; font-size: 1.02rem; line-height: 1.75; color: #f1f2f6;
+      background: rgba(10, 6, 6, 0.75); border-left: 3px solid #ff4757; padding: 16px 24px;
+    }
 
     /* HUD */
     #hud {
-      position: fixed; inset: 28px 0; pointer-events: none;
+      position: fixed; inset: 30px 0; pointer-events: none;
       display: flex; flex-direction: column; justify-content: space-between;
-      padding: 22px 36px; z-index: 10;
+      padding: 20px 36px; z-index: 10; transition: opacity 0.5s ease;
     }
     .top-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
     .glass-panel {
       background: var(--bg-hud);
       border: 1px solid var(--border-gold);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-      padding: 16px 22px; border-radius: 6px;
+      padding: 15px 22px; border-radius: 6px;
       backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      pointer-events: auto;
+      pointer-events: auto; transition: border-color 0.6s ease;
     }
+    body.exile-theme .glass-panel { border-color: rgba(255, 71, 87, 0.55); }
     .glass-panel h1 {
-      font-size: 1.15rem; color: var(--gold-accent); letter-spacing: 2.5px;
-      margin-bottom: 6px; font-weight: 600; text-transform: uppercase;
+      font-size: 1.15rem; color: var(--gold-accent); letter-spacing: 2px;
+      margin-bottom: 6px; font-weight: 600;
     }
+    body.exile-theme .glass-panel h1 { color: #ff6b81; }
     .glass-panel p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
 
     /* Status Bars */
-    .stats-box { min-width: 320px; display: flex; flex-direction: column; gap: 12px; }
+    .stats-box { min-width: 340px; display: flex; flex-direction: column; gap: 11px; }
     .stat-item { display: flex; flex-direction: column; gap: 5px; }
-    .stat-header { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; }
+    .stat-header { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; }
     .track { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
     .fill { height: 100%; transition: width 0.25s ease-out; }
     #fill-hayyim { background: linear-gradient(90deg, #10ac84, #2ed573); box-shadow: 0 0 10px #2ed573; width: 100%; }
+    body.exile-theme #fill-hayyim { background: linear-gradient(90deg, #c23616, #e84118); box-shadow: 0 0 10px #e84118; }
     #fill-shamar { background: linear-gradient(90deg, #2e86de, #54a0ff); box-shadow: 0 0 10px #54a0ff; width: 0%; }
 
     .gfx-toggle {
-      margin-top: 6px; display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.75rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;
+      margin-top: 4px; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      font-size: 0.74rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;
     }
     .gfx-btn {
-      background: rgba(245, 209, 126, 0.15); border: 1px solid var(--border-gold);
-      color: var(--gold-accent); padding: 3px 10px; border-radius: 3px; cursor: pointer; font-size: 0.72rem;
+      background: rgba(245, 209, 126, 0.14); border: 1px solid var(--border-gold);
+      color: var(--gold-accent); padding: 3px 9px; border-radius: 3px; cursor: pointer; font-size: 0.72rem;
     }
-    .gfx-btn:hover { background: rgba(245, 209, 126, 0.3); }
+    .gfx-btn.warn {
+      background: rgba(255, 71, 87, 0.18); border-color: #ff4757; color: #ff6b81;
+    }
+    .gfx-btn:hover { filter: brightness(1.25); }
 
     /* Reticle & Interaction Prompt */
     #center-hud {
@@ -92,7 +119,7 @@
     /* Bottom Exegesis & Controls */
     .bottom-bar { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
     #exegesis-panel { max-width: 680px; min-height: 96px; }
-    #ex-title { font-size: 0.88rem; color: var(--gold-accent); font-weight: bold; margin-bottom: 5px; letter-spacing: 0.5px; }
+    #ex-title { font-size: 0.88rem; color: var(--gold-accent); font-weight: bold; margin-bottom: 5px; }
     #ex-body { font-size: 0.84rem; color: var(--text-primary); line-height: 1.55; }
     #ex-ref { font-size: 0.74rem; color: var(--text-secondary); margin-top: 6px; font-style: italic; }
 
@@ -110,7 +137,7 @@
       background: rgba(10, 16, 22, 0.94); padding: 38px 44px; border-radius: 8px;
       box-shadow: 0 25px 70px rgba(0,0,0,0.9), 0 0 50px rgba(218, 180, 88, 0.12);
     }
-    .modal-card h2 { color: var(--gold-accent); font-size: 1.75rem; margin-bottom: 16px; letter-spacing: 2px; }
+    .modal-card h2 { color: var(--gold-accent); font-size: 1.7rem; margin-bottom: 16px; letter-spacing: 2px; }
     .modal-card p { font-size: 0.92rem; line-height: 1.7; color: var(--text-primary); margin-bottom: 16px; text-align: left; }
     .primary-btn {
       background: linear-gradient(135deg, #c59b27, #f5d17e); color: #05080c; border: none;
@@ -135,19 +162,30 @@
   <div class="letterbox top"></div>
   <div class="letterbox bottom"></div>
 
-  <!-- Start / Exile Modal -->
+  <!-- Dramatic Cutscene Banner (Triggered upon eating Forbidden Fruit) -->
+  <div id="cutscene-banner">
+    <div id="cutscene-heb">וַתִּפָּקַחְנָה עֵינֵי שְׁנֵיהֶם</div>
+    <div id="cutscene-title">【違約與審判】創世記 3:6–8, 22–24</div>
+    <div id="cutscene-desc">
+      你們伸手摘取了知善惡樹的果子，企圖自主決定善惡的標準。<br>
+      他們二人的眼睛就明亮了，才知道自己是赤身露體，便拿無花果樹的葉子為自己編作裙子……<br>
+      耶和華神把那人趕出伊甸園去，耕種他所自出之土；又在伊甸園的東邊安設基路伯和四面轉動發火焰的劍，把守生命樹的道路。
+    </div>
+  </div>
+
+  <!-- Start Modal -->
   <div id="overlay">
     <div class="modal-card" id="modal-content">
-      <h2>גַּן־עֵדֶן | 伊甸聖所：次世代光學渲染版</h2>
+      <h2>גַּן־עֵדֶן וּמִקֶּדֶם | 伊甸聖所與東門放逐 (創世記 2–3 章)</h2>
       <p>
-        <strong>次世代渲染管線（RAGE-Inspired PBR Pipeline）：</strong><br>
-        本場景採用即時預過濾環境光探針（PMREM IBL）、螢幕空間環境光遮蔽（SSAO）、6階分形布朗運動（FBM）微地形雕刻、焦散流體著色器（Caustics Gerstner Water）、體積上帝光（Volumetric God-Rays）以及 30,000 株 GPU 次表面散射風場植被。
+        <strong>第一幕：伊甸高山聖所（Act I: The Cosmic Sanctuary, Gen 2:4–25）</strong><br>
+        在天與地交匯的高山聖所中執行祭司的 <strong>ʿābad（事奉）</strong> 與 <strong>šāmar（看守）</strong>，疏通四道河、為活物命名、藉沉睡（<i>Tardēmâ</i>）迎來拯救之幫助者（<i>ʿĒzer</i>），並吃「生命樹」果子維持永生。
       </p>
       <p>
-        <strong>創世記 2–3 章空間神學（Cosmic Mountain Sanctuary）：</strong><br>
-        伊甸是天與地交匯的高山至聖所。霧氣（<i>ʾēd</i>）從地上騰，單一河源湧出並分為四道（比遜、基訓、底格里斯、幼發拉底）滋潤四方。你受託執行祭司的 <strong>ʿābad（事奉）</strong> 與 <strong>šāmar（看守）</strong>，仰賴中央如七枝金燈台的「生命樹」更新必死生命，並尊崇神對「知善惡樹」的道德定義主權。
+        <strong>第二幕：違約與東門放逐曠野（Act II: Exile East of Eden, Gen 3:1–24）</strong><br>
+        若在南側「知善惡樹」按下 <strong>[R]</strong> 摘取禁果，將觸發電影級<strong>「違約放逐過場」</strong>並開啟第二幕可遊玩場景：你將被逐出至伊甸東邊（<i>Miqqedem</i>）長滿荊棘與蒺藜的受咒詛紅土（<i>ʾĂdāmâ</i>），面對東門基路伯與旋轉火焰劍的封鎖，在汗流滿面的耕作中領受神所造的「皮衣（<i>Kotnot ʿOr</i>）」之恩。
       </p>
-      <button class="primary-btn" id="start-btn">啟動次世代聖所渲染 (鎖定視角)</button>
+      <button class="primary-btn" id="start-btn">進入聖所 (鎖定視角與啟動渲染)</button>
     </div>
   </div>
 
@@ -155,7 +193,7 @@
   <div id="hud">
     <div class="top-bar">
       <div class="glass-panel">
-        <h1>גַּן־עֵדֶן GAN EDEN</h1>
+        <h1 id="act-header">ACT I: גַּן־עֵדֶן GAN EDEN</h1>
         <p id="loc-text">當前區域：中央至聖所高台 (Holy of Holies Summit)</p>
         <p id="comp-text" style="margin-top:5px; color:var(--gold-accent);">狀態：那人單獨 (lōʾ-ṭôb הֱיוֹת הָאָדָם לְבַדּוֹ)</p>
       </div>
@@ -163,21 +201,21 @@
       <div class="glass-panel stats-box">
         <div class="stat-item">
           <div class="stat-header">
-            <span>חַיִּים 生命活力 (Hayyim / Vitality)</span>
+            <span id="label-hayyim">חַיִּים 生命活力 (Hayyim / Vitality)</span>
             <span id="txt-hayyim">100%</span>
           </div>
           <div class="track"><div class="fill" id="fill-hayyim"></div></div>
         </div>
         <div class="stat-item">
           <div class="stat-header">
-            <span>עָבַד וְשָׁמַר 聖所看守進度 (Abad & Shamar)</span>
+            <span id="label-shamar">עָבַד וְשָׁמַר 聖所看守進度 (Abad & Shamar)</span>
             <span id="txt-shamar">0 / 8</span>
           </div>
           <div class="track"><div class="fill" id="fill-shamar"></div></div>
         </div>
         <div class="gfx-toggle">
-          <span>渲染管線：PMREM + SSAO + Bloom + Lens Shader</span>
           <button class="gfx-btn" id="toggle-ssao">SSAO: 開啟 (Ultra)</button>
+          <button class="gfx-btn warn" id="quick-exile-btn">直接體驗：食禁果與放逐 (Gen 3)</button>
         </div>
       </div>
     </div>
@@ -196,9 +234,9 @@
 
       <div class="glass-panel controls-panel">
         <div><strong>[W/A/S/D]</strong> 移動步伐 | <strong>[Shift]</strong> 疾行 (Sprint)</div>
-        <div><strong>[Mouse]</strong> 環視聖所 | <strong>[P]</strong> 切換 SSAO 光遮蔽</div>
-        <div><strong>[E]</strong> 執行祭司職分：事奉/命名/領受生命果</div>
-        <div><strong>[R]</strong> 於知善惡樹前：奪取善惡定義權 (違約)</div>
+        <div><strong>[Mouse]</strong> 環視空間 | <strong>[P]</strong> 切換 SSAO 光遮蔽</div>
+        <div><strong>[E]</strong> 執行職分：事奉/命名/園外拔除荊棘與穿皮衣</div>
+        <div><strong>[R]</strong> 於知善惡樹前：食禁果觸發「放逐第二幕」</div>
       </div>
     </div>
   </div>
@@ -217,52 +255,58 @@
     // ==========================================
     const state = {
       isPlaying: false,
-      isExiled: false,
+      isCutscene: false,
+      isExiled: false,          // false = Act I (Eden), true = Act II (East of Eden Exile)
       hayyim: 100,
       tasksCompleted: 0,
       totalTasks: 8,
+      exileTasksCompleted: 0,
+      exileTotalTasks: 5,       // 3 處荊棘開墾 + 1 座皮衣祭壇 + 1 次命名夏娃(Hawwah)
       animalsNamed: 0,
       riversTended: 0,
       hasEzer: false,
+      hasGarmentOfSkin: false,
       ssaoEnabled: true,
       currentTarget: null
     };
 
     const interactables = [];
+    const exileInteractables = [];
     const faunaList = [];
     const windMaterials = [];
     let cherubimConstruct = null;
+    let exileWorldGroup = null;
     let ezerMesh = null;
 
     const exegeticalNotes = {
       treeOfLife: {
         title: "【生命樹 עֵץ הַחַיִּים】創世記 2:9, 3:22; 出埃及記 25:31–35",
-        body: "「生命樹代表超越神最初吹入人鼻孔之氣息的永恆生命。最初的人本質上是必死的（susceptible to death），唯有持續吃生命樹的果子才能更新生命。會幕中的七枝純金燈台（Menorah）即為風格化的生命樹，象徵神不息的生命光照。」",
+        body: "「生命樹代表超越神最初吹入人鼻孔之氣息的永恆生命。最初的人本質上是必死的（susceptible to death），唯有持續吃生命樹的果子才能更新生命。會幕中的七枝純金燈台（Menorah）即為風格化的生命樹。」",
         ref: "來源：Gordon J. Wenham (WBC Genesis 1-15); BibleProject (Adam to Noah Teacher Notes);《創造與人生智慧 L3》"
       },
       treeOfKnowledge: {
         title: "【知善惡樹 עֵץ הַדַּעַת טוֹב וָרָע】創世記 2:9, 2:17",
-        body: "「這棵樹代表『決定何為善、何為惡』的至高權柄。道德秩序的標準是由神設定，而非人自行定義。若人伸手奪取，即背棄創造主的榮耀，轉向受造物的聲音，落入死亡與放逐。」",
+        body: "「這棵樹代表『決定何為善、何為惡』的至高權柄。道德秩序的標準是由神設定，而非人自行定義。若人伸手奪取（按 R），即背棄創造主的榮耀，轉向受造物的聲音。」",
         ref: "來源：《創造與人生智慧 L3》; Tim Mackie (Trees and Torah, BibleProject Classroom)."
       },
       riverPishon: {
         title: "【第一道河：比遜河 Pishon】創世記 2:11–12",
-        body: "「環繞哈腓拉全地，那裡有上好的金子、珍珠（bdellium）和紅瑪瑙（carnelian）。這些寶石與精金正是建造會幕（出 25–31章）與耶路撒冷聖殿（王上 6–7章）的核心材料，印證伊甸園即宇宙聖殿原型。」",
+        body: "「環繞哈腓拉全地，那裡有上好的金子、珍珠（bdellium）和紅瑪瑙（carnelian）。這些寶石與精金正是建造會幕與耶路撒冷聖殿的核心材料，印證伊甸園即宇宙聖殿原型。」",
         ref: "來源：Ronald Hendel (Genesis 1-11, Anchor Yale); BibleProject Teacher Notes."
       },
       riverGihon: {
         title: "【第二道河：基訓河 Gihon】創世記 2:13",
-        body: "「環繞古實全地。自然界的大河皆由支流匯聚而成，伊甸的河卻相反：由單一神聖源頭湧出並分為四道（yippārēd）流向四方，象徵神安穩、肯定且向外傾流給萬國的豐盛供應。」",
+        body: "「環繞古實全地。自然界的大河皆由支流匯集而成，伊甸的河卻相反：由單一神聖源頭湧出並分為四道（yippārēd）流向四方，象徵神安穩、肯定且向外傾流給萬國的豐盛供應。」",
         ref: "來源：《創造與人生智慧 L3》; Ronald Hendel (Genesis 1-11)."
       },
       riverTigris: {
         title: "【第三道河：底格里斯河 Hiddekel】創世記 2:14",
-        body: "「流在亞述的東邊。從伊甸高山聖殿湧出的活水，平行於以西結書 47:1-12、詩篇 46:4 與啟示錄 22:1-2 從神與羔羊寶座流出的生命水河，醫治並滋潤列國。」",
+        body: "「流在亞述的東邊。從伊甸高山聖殿湧出的活水，平行於以西結書 47:1-12、詩篇 46:4 與啟示錄 22:1-2 從神與羔羊寶座流出的生命水河。」",
         ref: "來源：John H. Walton (The Lost World of Genesis One)."
       },
       riverEuphrates: {
         title: "【第四道河：幼發拉底河 Perat】創世記 2:14",
-        body: "「人類（ʾādām）受造是為了服事肥沃地土（ʾădāmâ）並看守原始森林（preserve the primordial forest），使其成為美感（悅人眼目）與品味（好作食物）的泉源。」",
+        body: "「人類（ʾādām）受造是為了服事肥沃地土（ʾădāmâ）並看守原始森林（preserve the primordial forest），使其成為美感與品味的泉源。」",
         ref: "來源：Norman Habel (Earth Bible Commentary);《創造與人生智慧 L3》"
       },
       namingAnimal: {
@@ -272,13 +316,28 @@
       },
       tardemahEzer: {
         title: "【沉睡（Tardēmâ）與拯救之幫助者（ʿĒzer）】創世記 2:18, 21–22",
-        body: "「『那人單獨不好』是創世記首次出現『不好』。希伯來文 ʿēzer 背後的動詞 ʿāzar 意為『從危險與死亡中拯救』（如詩 121:1）。女人將男人從孤立中拯救出來，同作皇家祭司。」",
-        ref: "來源：Victor P. Hamilton (The Book of Genesis, Ch. 1-17); J. Richard Middleton;《創造與人生智慧 L4》"
+        body: "「『那人單獨不好』是創世記首次出現『不好』。希伯來文 ʿēzer 背後的動詞 ʿāzar 意為『從危險與死亡中拯救』。女人將男人從孤立中拯救出來，同作皇家祭司。」",
+        ref: "來源：Victor P. Hamilton (The Book of Genesis, Ch. 1-17);《創造與人生智慧 L4》"
       },
-      exile: {
-        title: "【放逐與東門基路伯】創世記 3:22–24",
-        body: "「耶和華神便打發他出伊甸園去，耕種他所自出之土；又在伊甸園的東邊（miqqedem），安設基路伯和四面轉動發火焰的劍，要把守生命樹的道路。」",
+      exileGate: {
+        title: "【東門基路伯與旋轉火焰劍】創世記 3:22–24",
+        body: "「耶和華神便打發他出伊甸園去，耕種他所自出之土；又在伊甸園的東邊（miqqedem），安設基路伯和四面轉動發火焰的劍，要把守生命樹的道路，免得他伸手又摘生命樹的果子吃而永遠活著。」",
         ref: "來源：BibleProject (Adam to Noah & Jacob Teacher Notes)."
+      },
+      cursedGround: {
+        title: "【受咒詛的地土與荊棘蒺藜】創世記 3:17–19",
+        body: "「地必為你的緣故受咒詛；你必終身勞苦才能從地裡得吃的。地必給你長出荊棘和蒺藜來（qôṣ wədardar）……你必汗流滿面才得糊口，直到你歸了土，因為你是從土（ʾădāmâ）而出的。」",
+        ref: "來源：Norman Habel (The Birth, The Curse And The Greening Of Earth); Ronald Hendel (Genesis 1-11)."
+      },
+      garmentOfSkin: {
+        title: "【皮衣的遮蓋與保護（Kotnot ʿOr）】創世記 3:7, 21",
+        body: "「違約後人如同所拜的樹一樣拿無花果樹葉編裙子（3:7），卻無法掩蓋羞恥與脆弱。耶和華神為亞當和他妻子用皮子作衣服給他們穿（3:21），在放逐審判中彰顯神主動的恩典與保護。」",
+        ref: "來源：BibleProject (Adam to Noah Teacher Notes); Gordon J. Wenham (WBC Genesis 1-15)."
+      },
+      namingHawwah: {
+        title: "【眾生之母：夏娃（Ḥawwâ）】創世記 3:20",
+        body: "「亞當給他妻子起名叫夏娃（Ḥawwâ，與希伯來文 ḥay『生命』雙關），因為她是眾生之母。即便在死亡宣告之後，人類仍透過繁衍與神應許的後裔（3:15）迎向生命的延續。」",
+        ref: "來源：Ronald Hendel (Genesis 1-11, Anchor Yale); Gordon J. Wenham (WBC)."
       }
     };
 
@@ -291,7 +350,7 @@
     }
 
     // ==========================================
-    // 2. 確定性 FBM 雜訊與微表面貼圖引擎 (Deterministic FBM & PBR Map Generator)
+    // 2. 確定性 FBM 雜訊與微表面貼圖引擎
     // ==========================================
     function hash2D(x, y) {
       let n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
@@ -325,7 +384,6 @@
       return t * t * (3 - 2 * t);
     };
 
-    // 生成高精度切線空間法線貼圖與粗糙度貼圖 (Tangent-Space Normal & Roughness Map)
     function generatePBRMaps(size = 512, scale = 18, strength = 3.2) {
       const normCanvas = document.createElement('canvas');
       normCanvas.width = size; normCanvas.height = size;
@@ -403,7 +461,6 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
-    // 物理大氣天空與 PMREM IBL 烘焙 (GTA-style Dynamic Sky & Radiance Probe)
     const sky = new Sky();
     sky.scale.setScalar(1200);
     scene.add(sky);
@@ -424,7 +481,6 @@
       sunPos.setFromSphericalCoords(1, phi, theta);
       skyUniforms['sunPosition'].value.copy(sunPos);
 
-      // 烘焙即時 HDR 環境反射貼圖供黃金、水面與寶石使用
       const envScene = new THREE.Scene();
       const skyClone = new Sky();
       skyClone.scale.setScalar(100);
@@ -436,17 +492,16 @@
       const renderTarget = pmremGenerator.fromScene(envScene, 0.04);
       scene.environment = renderTarget.texture;
     }
-    updateAtmosphere(19, 138); // 黃金時刻斜射光
+    updateAtmosphere(19, 138);
 
-    // 太陽主光源與高精度軟陰影
     const sunLight = new THREE.DirectionalLight(0xffe4b5, 3.2);
     sunLight.position.copy(sunPos).multiplyScalar(140);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 4096;
     sunLight.shadow.mapSize.height = 4096;
     sunLight.shadow.camera.near = 10;
-    sunLight.shadow.camera.far = 320;
-    const shadowBound = 95;
+    sunLight.shadow.camera.far = 350;
+    const shadowBound = 115;
     sunLight.shadow.camera.left = -shadowBound;
     sunLight.shadow.camera.right = shadowBound;
     sunLight.shadow.camera.top = shadowBound;
@@ -457,12 +512,10 @@
     const ambientHemi = new THREE.HemisphereLight(0xfff5e4, 0x1a3322, 0.55);
     scene.add(ambientHemi);
 
-    // 至聖所榮光點光源
     const shekinahLight = new THREE.PointLight(0xffcb52, 6.5, 50, 1.4);
     shekinahLight.position.set(0, 13, 0);
     scene.add(shekinahLight);
 
-    // Post-Processing Composer (RenderPass -> SSAOPass -> UnrealBloomPass -> Cinematic Lens Pass)
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
@@ -474,13 +527,10 @@
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.65, // strength
-      0.5,  // radius
-      0.78  // threshold
+      0.65, 0.5, 0.78
     );
     composer.addPass(bloomPass);
 
-    // 電影級鏡頭色差、暗角與底片顆粒 ShaderPass (RAGE Cinematic Camera Pass)
     const CinematicLensShader = {
       uniforms: {
         tDiffuse: { value: null },
@@ -514,15 +564,11 @@
           float b = texture2D(tDiffuse, vUv - offset).b;
           vec3 col = vec3(r, g, b);
 
-          // 微妙底片顆粒 (Subtle Film Grain)
-          float grain = (rand(vUv + fract(uTime)) - 0.5) * 0.022;
+          float grain = (rand(vUv + fract(uTime)) - 0.5) * 0.024;
           col += grain;
 
-          // 光學鏡頭暗角 (Optical Vignette)
           float len = length(dist);
           col *= smoothstep(0.85, 0.85 - uVignette, len);
-
-          // S-Curve 對比微調
           col = mix(col, smoothstep(0.0, 1.0, col), 0.18);
 
           gl_FragColor = vec4(col, 1.0);
@@ -533,29 +579,30 @@
     composer.addPass(lensPass);
 
     // ==========================================
-    // 4. FBM 宇宙高山聖所地形雕刻 (6-Octave FBM Terrain & Wetness Map)
+    // 4. FBM 宇宙高山聖所與東門曠野地形雕刻
     // ==========================================
     function getEdenElevation(x, z) {
       const r = Math.sqrt(x * x + z * z);
 
-      // 1. 中央至聖所高台 (Inner Sanctuary Ziggurat Mound, r < 18)
+      // 1. 中央至聖所高台 (r < 18)
       const innerSanctuary = 3.6 / (1.0 + Math.pow(r / 17.5, 7));
 
-      // 2. 伊甸森林台地 (Garden Plateau, r < 60)
+      // 2. 伊甸森林台地 (r < 60)
       const gardenPlateau = 3.8 / (1.0 + Math.pow(r / 59.0, 9));
 
-      // 3. FBM 自然岩石與地貌起伏 (6-Octave Fractal Detail)
+      // 3. FBM 自然岩石與地貌起伏
       const fbmVal = fbm(x * 0.035 + 10.5, z * 0.035 + 10.5, 6);
       const ridgeVal = 1.0 - Math.abs(fbm(x * 0.02, z * 0.02, 4) * 2.0 - 1.0);
       const organicHeight = ((fbmVal - 0.5) * 2.2 + ridgeVal * 0.75) * Math.smoothstep(r, 13, 28);
 
-      // 4. 外圍遠山環繞 (Distant Horizon Mountains, r > 78)
-      const outerMountains = Math.smoothstep(r, 76, 115) * (fbm(x * 0.025, z * 0.025, 5) * 22.0);
+      // 4. 外圍遠山環繞，但在東邊 (x > 55, |z| < 38) 開闢「東門放逐曠野盆地 (Miqqedem Valley)」
+      const isEastValley = (x > 50) ? Math.exp(-Math.pow(z / 30.0, 2)) : 0.0;
+      const outerMountains = Math.smoothstep(r, 82, 122) * (fbm(x * 0.025, z * 0.025, 5) * 22.0) * (1.0 - isEastValley * 0.88);
 
-      // 5. 四道河河道雕刻 (4 River Channels)
+      // 5. 四道河河道雕刻
       const distToAxis = Math.min(Math.abs(x), Math.abs(z));
       let riverCarve = 0;
-      if (r > 3.6 && r < 70 && distToAxis < 4.0) {
+      if (r > 3.6 && r < 68 && distToAxis < 4.0) {
         const profile = Math.cos((distToAxis / 4.0) * (Math.PI / 2));
         riverCarve = profile * profile * 1.15;
       }
@@ -563,7 +610,7 @@
       return innerSanctuary + gardenPlateau + organicHeight + outerMountains - riverCarve;
     }
 
-    const terrainGeo = new THREE.PlaneGeometry(250, 250, 320, 320);
+    const terrainGeo = new THREE.PlaneGeometry(260, 260, 320, 320);
     terrainGeo.rotateX(-Math.PI / 2);
 
     const posAttr = terrainGeo.attributes.position;
@@ -583,26 +630,22 @@
       const vx = posAttr.getX(i);
       const vy = posAttr.getY(i);
       const vz = posAttr.getZ(i);
-      const ny = normAttr.getY(i); // 坡度法線 Y 分量 (越小代表越陡峭)
+      const ny = normAttr.getY(i);
       const r = Math.sqrt(vx * vx + vz * vz);
       const distToAxis = Math.min(Math.abs(vx), Math.abs(vz));
       const microNoise = fbm(vx * 0.15, vz * 0.15, 3);
 
-      if (r > 3.6 && r < 68 && distToAxis < 3.9) {
-        // 濕潤河岸金沙與深色鵝卵石 (Wet Riverbank & Gold-flecked Silt)
+      if (r > 3.6 && r < 66 && distToAxis < 3.9) {
         cTemp.setHex(0x6e5a3e).lerp(new THREE.Color(0xc5a059), microNoise * 0.5);
       } else if (ny < 0.78) {
-        // 陡峭岩壁露出石灰岩與玄武岩肌理 (Exposed Cliff Rock)
         cTemp.setHex(0x4a4e54).lerp(new THREE.Color(0x6c655b), microNoise);
       } else if (vy > 6.4 && r < 19) {
-        // 至聖所高台豐茂翡翠草地
         cTemp.setHex(0x28593a).lerp(new THREE.Color(0x3f7a4d), microNoise);
       } else if (r < 60) {
-        // 伊甸森林腐植土與苔蘚地衣
         cTemp.setHex(0x1d4227).lerp(new THREE.Color(0x345929), microNoise);
       } else {
-        // 園外曠野紅土與乾燥岩層 (ʾădāmâ)
-        cTemp.setHex(0x4d3624).lerp(new THREE.Color(0x2f241c), microNoise);
+        // 園外受咒詛的乾裂紅土與灰燼岩層 (Cursed ʾădāmâ East of Eden)
+        cTemp.setHex(0x543422).lerp(new THREE.Color(0x2b1d16), microNoise);
       }
       vColors.push(cTemp.r, cTemp.g, cTemp.b);
     }
@@ -622,7 +665,6 @@
     terrainMesh.receiveShadow = true;
     scene.add(terrainMesh);
 
-    // 至聖所聖殿黃金鑲邊與刻紋基座 (Sanctuary Golden Crown & Pillars)
     const goldPBRMat = new THREE.MeshPhysicalMaterial({
       color: 0xffd266, metalness: 0.96, roughness: 0.14,
       clearcoat: 0.6, normalMap: groundPBR.normalMap, normalScale: new THREE.Vector2(0.15, 0.15),
@@ -635,7 +677,7 @@
     scene.add(sanctumRing);
 
     // ==========================================
-    // 5. 次世代焦散流體水體著色器 (Caustics & Gerstner Water Shader)
+    // 5. 次世代焦散流體水體著色器 (Caustics Water Shader)
     // ==========================================
     const waterUniforms = {
       uTime: { value: 0 },
@@ -652,11 +694,9 @@
         uniform float uTime;
         varying vec3 vWorldPos;
         varying vec2 vUv;
-
         void main() {
           vUv = uv;
           vec4 wp = modelMatrix * vec4(position, 1.0);
-          // Gerstner 多向波浪合成
           float w1 = sin(wp.x * 1.6 - uTime * 3.4) * 0.055;
           float w2 = cos(wp.z * 1.6 - uTime * 3.0) * 0.055;
           float w3 = sin((wp.x + wp.z) * 2.8 - uTime * 4.5) * 0.025;
@@ -674,7 +714,6 @@
         varying vec3 vWorldPos;
         varying vec2 vUv;
 
-        // 程序化焦散網格函數 (Procedural Optical Caustics)
         float causticPattern(vec2 uv, float t) {
           vec2 p = mod(uv * 6.2831853, 6.2831853) - 250.0;
           vec2 i = vec2(p);
@@ -691,25 +730,19 @@
         }
 
         void main() {
-          float radial = length(vWorldPos.xz);
           vec2 flowUv = vWorldPos.xz * 0.18 - normalize(vWorldPos.xz + 0.001) * (uTime * 0.45);
-
           float c1 = causticPattern(flowUv, uTime * 0.8);
           float c2 = causticPattern(flowUv + 0.35, -uTime * 0.6);
           float caustics = clamp(c1 + c2 * 0.6, 0.0, 1.0);
 
-          // 法線微擾動
           float nx = sin(vWorldPos.x * 3.5 - uTime * 4.2) * 0.18 + cos(vWorldPos.z * 4.2 + uTime * 3.1) * 0.12;
           float nz = cos(vWorldPos.z * 3.5 - uTime * 3.8) * 0.18 + sin(vWorldPos.x * 4.0 - uTime * 2.9) * 0.12;
           vec3 N = normalize(vec3(nx, 1.0, nz));
 
           vec3 V = normalize(cameraPosition - vWorldPos);
           float fresnel = pow(1.0 - max(dot(V, N), 0.0), 3.5);
-
-          // 岸邊白沫 (Shoreline Foam)
           float edgeFoam = smoothstep(0.38, 0.49, abs(vUv.y - 0.5));
 
-          // 太陽鏡面高光 (Sun Specular Glint)
           vec3 R = reflect(-uSunDir, N);
           float spec = pow(max(dot(V, R), 0.0), 96.0);
 
@@ -723,12 +756,10 @@
       `
     });
 
-    // 中央活水湧泉池 (Gen 2:6, 10)
     const fountainPool = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 0.4, 64), waterShaderMat);
     fountainPool.position.set(0, getEdenElevation(0, 0) - 0.15, 0);
     scene.add(fountainPool);
 
-    // 四道河與哈腓拉寶石礦脈 (Gen 2:10-14)
     const riverDefinitions = [
       { name: "比遜河 (Pishon - 哈腓拉精金、珍珠與紅瑪瑙)", angle: 0, note: "riverPishon", hasGems: true },
       { name: "基訓河 (Gihon - 環繞古實全地)", angle: Math.PI / 2, note: "riverGihon", hasGems: false },
@@ -737,11 +768,11 @@
     ];
 
     riverDefinitions.forEach((r) => {
-      const rGeo = new THREE.PlaneGeometry(64, 5.0, 96, 16);
+      const rGeo = new THREE.PlaneGeometry(60, 5.0, 90, 16);
       rGeo.rotateX(-Math.PI / 2);
       const rPos = rGeo.attributes.position;
       for (let i = 0; i < rPos.count; i++) {
-        const lx = rPos.getX(i) + 35.5;
+        const lx = rPos.getX(i) + 34.0;
         rPos.setX(i, lx);
         const bedY = getEdenElevation(lx, 0);
         rPos.setY(i, bedY + 0.46);
@@ -751,35 +782,17 @@
       const rGroup = new THREE.Group();
       rGroup.add(new THREE.Mesh(rGeo, waterShaderMat));
 
-      // 河岸鵝卵石與岩石群
-      const rockMat = new THREE.MeshStandardMaterial({
-        color: 0x59554f, normalMap: groundPBR.normalMap, roughness: 0.45, metalness: 0.15
-      });
-      for (let k = 0; k < 28; k++) {
-        const rx = 14 + Math.random() * 48;
-        const rz = (k % 2 === 0 ? 1 : -1) * (2.6 + Math.random() * 1.8);
-        const ry = getEdenElevation(rx, rz);
-        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.35 + Math.random() * 0.55, 1), rockMat);
-        rock.scale.set(1.2, 0.65, 1.0);
-        rock.position.set(rx, ry + 0.1, rz);
-        rock.rotation.set(Math.random(), Math.random(), Math.random());
-        rock.castShadow = true;
-        rock.receiveShadow = true;
-        rGroup.add(rock);
-      }
-
-      // 比遜河：高折射率紅瑪瑙 (Carnelian)、珍珠 (Bdellium) 與精金 (Gen 2:11-12)
       if (r.hasGems) {
         const carnelianMat = new THREE.MeshPhysicalMaterial({
           color: 0xd63031, emissive: 0x550909, emissiveIntensity: 0.4,
-          roughness: 0.06, transmission: 0.82, ior: 1.54, thickness: 1.8, envMapIntensity: 2.0
+          roughness: 0.06, transmission: 0.82, ior: 1.54, thickness: 1.8
         });
         const bdelliumMat = new THREE.MeshPhysicalMaterial({
           color: 0xfdfefe, emissive: 0x2f3640, emissiveIntensity: 0.25,
-          roughness: 0.05, clearcoat: 1.0, iridescence: 0.9, iridescenceIOR: 1.4, envMapIntensity: 2.0
+          roughness: 0.05, clearcoat: 1.0, iridescence: 0.9
         });
 
-        for (let g = 0; g < 22; g++) {
+        for (let g = 0; g < 18; g++) {
           const gx = 19 + g * 2.1;
           const gz = (g % 2 === 0 ? 1 : -1) * (2.5 + (g % 3) * 0.6);
           const gy = getEdenElevation(gx, gz);
@@ -792,25 +805,20 @@
         }
       }
 
-      // 河道祭司看守聖壇 (Priestly Shamar Sanctuary Node)
       const shrineGroup = new THREE.Group();
       const baseMesh = new THREE.Mesh(
         new THREE.CylinderGeometry(0.85, 1.15, 1.5, 24),
         new THREE.MeshStandardMaterial({ color: 0xdfe4ea, normalMap: groundPBR.normalMap, roughness: 0.3 })
       );
-      const trimRing = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.08, 16, 48), goldPBRMat);
-      trimRing.rotation.x = Math.PI / 2;
-      trimRing.position.y = 0.75;
-
       const crystalMat = new THREE.MeshPhysicalMaterial({
         color: 0x00cec9, emissive: 0x007799, emissiveIntensity: 1.5,
         roughness: 0.05, transmission: 0.88, ior: 1.6, thickness: 2.0
       });
       const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.0, 1), crystalMat);
       crystal.position.y = 2.2;
-      shrineGroup.add(baseMesh, trimRing, crystal);
+      shrineGroup.add(baseMesh, crystal);
 
-      const nodeR = 36;
+      const nodeR = 35;
       const nodeY = getEdenElevation(nodeR, 0) + 0.6;
       shrineGroup.position.set(nodeR, nodeY, 0);
       rGroup.add(shrineGroup);
@@ -830,18 +838,14 @@
     });
 
     // ==========================================
-    // 6. 體積上帝光與有機分枝聖樹系統 (Volumetric God-Rays & Organic Trees)
+    // 6. 體積上帝光與有機分枝聖樹系統
     // ==========================================
+    const godRayCones = [];
     function addGodRayCone(x, y, z, colorHex, radiusBottom = 9, height = 28) {
       const coneGeo = new THREE.ConeGeometry(radiusBottom, height, 32, 1, true);
       const coneMat = new THREE.ShaderMaterial({
-        uniforms: {
-          uColor: { value: new THREE.Color(colorHex) }
-        },
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide,
+        uniforms: { uColor: { value: new THREE.Color(colorHex) } },
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
         vertexShader: `
           varying vec2 vUv;
           varying vec3 vNormal;
@@ -873,23 +877,18 @@
       cone.rotation.z = -0.15;
       cone.rotation.x = 0.1;
       scene.add(cone);
+      godRayCones.push(cone);
     }
 
     function createWindFoliageMaterial(baseColorHex, emissiveHex = 0x000000, emissiveInt = 0, isSacred = false) {
       const mat = new THREE.MeshStandardMaterial({
-        color: baseColorHex,
-        emissive: emissiveHex,
-        emissiveIntensity: emissiveInt,
-        roughness: isSacred ? 0.25 : 0.48,
-        metalness: isSacred ? 0.45 : 0.08
+        color: baseColorHex, emissive: emissiveHex, emissiveIntensity: emissiveInt,
+        roughness: isSacred ? 0.25 : 0.48, metalness: isSacred ? 0.45 : 0.08
       });
-
       mat.onBeforeCompile = (shader) => {
         shader.uniforms.uTime = { value: 0 };
         mat.userData.shader = shader;
-        shader.vertexShader = `
-          uniform float uTime;
-        ` + shader.vertexShader.replace(
+        shader.vertexShader = `uniform float uTime;\n` + shader.vertexShader.replace(
           '#include <begin_vertex>',
           `
           #include <begin_vertex>
@@ -913,30 +912,17 @@
         roughness: isSacred ? 0.35 : 0.85, metalness: isSacred ? 0.55 : 0.05
       });
 
-      // 盤根與主樹幹
-      for (let r = 0; r < 5; r++) {
-        const rAngle = (r / 5) * Math.PI * 2;
-        const root = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * scale, 0.42 * scale, 1.8 * scale, 12), trunkMat);
-        root.position.set(Math.cos(rAngle) * 0.55 * scale, 0.5 * scale, Math.sin(rAngle) * 0.55 * scale);
-        root.rotation.z = Math.cos(rAngle) * -0.5;
-        root.rotation.x = Math.sin(rAngle) * 0.5;
-        root.castShadow = true;
-        group.add(root);
-      }
-
       const mainTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.46 * scale, 0.92 * scale, 4.5 * scale, 20), trunkMat);
       mainTrunk.position.y = 2.25 * scale;
       mainTrunk.castShadow = true;
-      mainTrunk.receiveShadow = true;
       group.add(mainTrunk);
 
       const leafMat = createWindFoliageMaterial(leafHex, emissiveHex, emissiveInt, isSacred);
-      const branches = isSacred ? 7 : 5; // 7 branches = Tabernacle Menorah archetype
+      const branches = isSacred ? 7 : 5;
 
       for (let b = 0; b < branches; b++) {
         const bAngle = (b / branches) * Math.PI * 2;
         const bTilt = 0.48 + (b % 2) * 0.18;
-
         const pivot = new THREE.Group();
         pivot.position.y = 3.8 * scale;
         pivot.rotation.y = bAngle;
@@ -945,36 +931,26 @@
         const bLen = (2.6 + (b % 3) * 0.45) * scale;
         const limb = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * scale, 0.36 * scale, bLen, 14), trunkMat);
         limb.position.y = bLen * 0.5;
-        limb.castShadow = true;
         pivot.add(limb);
 
-        const canopyGeo = new THREE.IcosahedronGeometry(1.85 * scale, 3);
-        const cPos = canopyGeo.attributes.position;
-        for (let k = 0; k < cPos.count; k++) {
-          const vx = cPos.getX(k), vy = cPos.getY(k), vz = cPos.getZ(k);
-          const n = 1.0 + 0.16 * Math.sin(vx * 2.2) * Math.cos(vz * 2.2);
-          cPos.setXYZ(k, vx * n, vy * 0.72 * n, vz * n);
-        }
-        canopyGeo.computeVertexNormals();
-
-        const canopy = new THREE.Mesh(canopyGeo, leafMat);
+        const canopy = new THREE.Mesh(new THREE.IcosahedronGeometry(1.85 * scale, 2), leafMat);
+        canopy.scale.y = 0.72;
         canopy.position.y = bLen + 0.55 * scale;
         canopy.castShadow = true;
-        canopy.receiveShadow = true;
         pivot.add(canopy);
 
         if (isSacred) {
           const fruitMat = new THREE.MeshPhysicalMaterial({
             color: 0xffffff, emissive: emissiveHex, emissiveIntensity: 2.8, roughness: 0.05, clearcoat: 1.0
           });
-          const fruit = new THREE.Mesh(new THREE.SphereGeometry(0.25 * scale, 20, 20), fruitMat);
+          const fruit = new THREE.Mesh(new THREE.SphereGeometry(0.25 * scale, 16, 16), fruitMat);
           fruit.position.set(0.45 * scale, bLen - 0.15 * scale, 0);
           pivot.add(fruit);
         }
         group.add(pivot);
       }
 
-      const crownTop = new THREE.Mesh(new THREE.IcosahedronGeometry(2.45 * scale, 3), leafMat);
+      const crownTop = new THREE.Mesh(new THREE.IcosahedronGeometry(2.45 * scale, 2), leafMat);
       crownTop.position.y = 6.5 * scale;
       crownTop.scale.y = 0.72;
       crownTop.castShadow = true;
@@ -984,7 +960,6 @@
       return { group, crownTop, by };
     }
 
-    // 1. 生命樹 (Tree of Life - 園子中央偏北 + 體積上帝光)
     const treeOfLife = buildDetailedTree({
       x: 0, z: -6.8, scale: 1.5,
       trunkHex: 0xa68342, leafHex: 0xffd700,
@@ -1000,7 +975,6 @@
       position: new THREE.Vector3(0, treeOfLife.by + 2.5, -6.8)
     });
 
-    // 2. 分辨善惡樹 (Tree of Knowledge of Good and Bad - 園子中央偏南)
     const treeOfKnow = buildDetailedTree({
       x: 0, z: 7.4, scale: 1.38,
       trunkHex: 0x2b1916, leafHex: 0x7b0d3e,
@@ -1016,37 +990,31 @@
       position: new THREE.Vector3(0, treeOfKnow.by + 2.5, 7.4)
     });
 
-    // 3. 伊甸茂密原始森林 (Gen 2:9, 15 - 75 棵高細節有機樹木與森林光束)
     const forestLeafColors = [0x1b4332, 0x23533d, 0x2d6a4f, 0x40916c, 0x52b788, 0xc89d66];
-    for (let i = 0; i < 75; i++) {
-      const radius = 19.5 + Math.random() * 38;
+    for (let i = 0; i < 65; i++) {
+      const radius = 19.5 + Math.random() * 36;
       const theta = Math.random() * Math.PI * 2;
       const x = Math.cos(theta) * radius;
       const z = Math.sin(theta) * radius;
       if (Math.min(Math.abs(x), Math.abs(z)) < 5.5) continue;
 
-      const scale = 0.75 + Math.random() * 0.75;
+      const scale = 0.75 + Math.random() * 0.7;
       const lCol = forestLeafColors[i % forestLeafColors.length];
-      const t = buildDetailedTree({ x, z, scale, leafHex: lCol });
-      if (i % 14 === 0) addGodRayCone(x, t.by, z, 0xfff3d1, 5.5, 24);
+      buildDetailedTree({ x, z, scale, leafHex: lCol });
     }
 
     // ==========================================
-    // 7. 30,000 株 GPU 實例化次表面散射草叢與上騰霧氣 (GPU Instanced Foliage & Mist)
+    // 7. 26,000 株 GPU 風場草叢與粒子系統
     // ==========================================
-    const grassCount = 30000;
+    const grassCount = 26000;
     const grassGeo = new THREE.ConeGeometry(0.075, 0.75, 4);
     grassGeo.translate(0, 0.375, 0);
 
-    const grassMat = new THREE.MeshStandardMaterial({
-      color: 0x3b7a4a, roughness: 0.55, metalness: 0.05
-    });
+    const grassMat = new THREE.MeshStandardMaterial({ color: 0x3b7a4a, roughness: 0.55 });
     grassMat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = { value: 0 };
       grassMat.userData.shader = shader;
-      shader.vertexShader = `
-        uniform float uTime;
-      ` + shader.vertexShader.replace(
+      shader.vertexShader = `uniform float uTime;\n` + shader.vertexShader.replace(
         '#include <begin_vertex>',
         `
         #include <begin_vertex>
@@ -1064,7 +1032,7 @@
     const dummy = new THREE.Object3D();
     const gColor = new THREE.Color();
     for (let i = 0; i < grassCount; i++) {
-      const r = Math.sqrt(Math.random()) * 58;
+      const r = Math.sqrt(Math.random()) * 57;
       const theta = Math.random() * Math.PI * 2;
       const gx = Math.cos(theta) * r;
       const gz = Math.sin(theta) * r;
@@ -1083,12 +1051,11 @@
     }
     scene.add(grassInstanced);
 
-    // 上騰水霧與神聖微粒 (Gen 2:6 ʾēd mist)
     const mistCount = 2000;
     const mistGeo = new THREE.BufferGeometry();
     const mistPos = new Float32Array(mistCount * 3);
     for (let i = 0; i < mistCount; i++) {
-      const r = Math.random() * 64;
+      const r = Math.random() * 88;
       const t = Math.random() * Math.PI * 2;
       const px = Math.cos(t) * r;
       const pz = Math.sin(t) * r;
@@ -1098,52 +1065,45 @@
     }
     mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
     const mistMat = new THREE.PointsMaterial({
-      color: 0xffeaa7, size: 0.14, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending
+      color: 0xffeaa7, size: 0.15, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending
     });
     const mistSystem = new THREE.Points(mistGeo, mistMat);
     scene.add(mistSystem);
 
     // ==========================================
-    // 8. 高擬真多關節解剖雕塑活物 (Articulated Anatomical Fauna - Gen 2:19-20)
+    // 8. 多關節解剖雕塑活物與沉睡之石 (Gen 2:19-22)
     // ==========================================
     function createArticulatedAnimal({ species, hebName, x, z, colorHex, accentHex }) {
       const root = new THREE.Group();
       const furMat = new THREE.MeshStandardMaterial({
         color: colorHex, normalMap: groundPBR.normalMap, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 0.45
       });
-      const accentMat = new THREE.MeshStandardMaterial({
-        color: accentHex, roughness: 0.35, metalness: 0.2
-      });
+      const accentMat = new THREE.MeshStandardMaterial({ color: accentHex, roughness: 0.35, metalness: 0.2 });
 
-      // 胸腔與腹腔 (Ribcage & Pelvis)
-      const chest = new THREE.Mesh(new THREE.SphereGeometry(0.62, 24, 24), furMat);
+      const chest = new THREE.Mesh(new THREE.SphereGeometry(0.62, 20, 20), furMat);
       chest.scale.set(0.95, 1.05, 1.35);
       chest.position.set(0, 1.35, 0.45);
       chest.castShadow = true;
       root.add(chest);
 
-      const abdomen = new THREE.Mesh(new THREE.SphereGeometry(0.54, 24, 24), furMat);
+      const abdomen = new THREE.Mesh(new THREE.SphereGeometry(0.54, 20, 20), furMat);
       abdomen.scale.set(0.9, 0.95, 1.3);
       abdomen.position.set(0, 1.3, -0.45);
-      abdomen.castShadow = true;
       root.add(abdomen);
 
-      // 頸部與頭部樞紐 (Neck & Head Pivot)
       const headPivot = new THREE.Group();
       headPivot.position.set(0, 1.65, 0.95);
-
-      const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.65, 16, 16), furMat);
+      const neck = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.65, 12, 12), furMat);
       neck.rotation.x = -0.4;
       headPivot.add(neck);
 
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 24, 24), furMat);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), furMat);
       head.scale.set(0.9, 0.9, 1.35);
       head.position.set(0, 0.55, 0.35);
       headPivot.add(head);
 
-      // 物種專屬解剖細節 (獅子鬃毛 / 雄鹿分叉鹿角 / 飛鷹雙翼)
       if (species === 'lion') {
-        const mane = new THREE.Mesh(new THREE.DodecahedronGeometry(0.62, 2), accentMat);
+        const mane = new THREE.Mesh(new THREE.DodecahedronGeometry(0.62, 1), accentMat);
         mane.position.set(0, 0.38, 0.15);
         headPivot.add(mane);
       } else if (species === 'stag') {
@@ -1151,7 +1111,6 @@
           const antler = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.06, 0.95, 8), accentMat);
           antler.position.set(side, 1.05, 0.25);
           antler.rotation.z = side > 0 ? -0.45 : 0.45;
-          antler.rotation.x = -0.25;
           headPivot.add(antler);
         });
       } else if (species === 'eagle') {
@@ -1162,18 +1121,15 @@
           root.add(wing);
         });
       }
-
       root.add(headPivot);
 
-      // 四肢關節樞紐 (Articulated Legs)
       const legs = [];
-      const legOffsets = [[-0.36, 0.65], [0.36, 0.65], [-0.34, -0.65], [0.34, -0.65]];
-      legOffsets.forEach(([lx, lz]) => {
+      [[-0.36, 0.65], [0.36, 0.65], [-0.34, -0.65], [0.34, -0.65]].forEach(([lx, lz]) => {
         const legPivot = new THREE.Group();
         legPivot.position.set(lx, 1.15, lz);
-        const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.55, 12, 12), furMat);
+        const upperLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.55, 10, 10), furMat);
         upperLeg.position.y = -0.3;
-        const lowerLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.55, 12), accentMat);
+        const lowerLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.55, 10), accentMat);
         lowerLeg.position.y = -0.8;
         legPivot.add(upperLeg, lowerLeg);
         root.add(legPivot);
@@ -1187,14 +1143,8 @@
       const obj = {
         type: 'animal',
         name: `未命名的活物 (Nepeš Ḥayyâ)`,
-        hebName,
-        note: 'namingAnimal',
-        mesh: root,
-        headPivot,
-        legs,
-        position: new THREE.Vector3(x, by + 1.5, z),
-        named: false,
-        phase: Math.random() * 10
+        hebName, note: 'namingAnimal', mesh: root, headPivot, legs,
+        position: new THREE.Vector3(x, by + 1.5, z), named: false, phase: Math.random() * 10
       };
       faunaList.push(obj);
       interactables.push(obj);
@@ -1204,14 +1154,11 @@
     createArticulatedAnimal({ species: 'eagle', hebName: "נֶשֶׁר (Nešer - 飛鷹)", x: 25, z: -24, colorHex: 0xf1f2f6, accentHex: 0xd4af37 });
     createArticulatedAnimal({ species: 'stag', hebName: "אַיָּל (ʾAyyāl - 雄鹿)", x: -24, z: 23, colorHex: 0x9c6644, accentHex: 0xe6ccb2 });
 
-    // 沉睡之石祭壇 (Tardēmâ Altar - Gen 2:21-22)
     const tardX = -9.0, tardZ = 0;
     const tardY = getEdenElevation(tardX, tardZ);
     const tardStone = new THREE.Mesh(
       new THREE.CylinderGeometry(1.75, 2.15, 0.85, 32),
-      new THREE.MeshPhysicalMaterial({
-        color: 0xf5f6fa, normalMap: groundPBR.normalMap, roughness: 0.12, clearcoat: 0.9, envMapIntensity: 1.5
-      })
+      new THREE.MeshPhysicalMaterial({ color: 0xf5f6fa, normalMap: groundPBR.normalMap, roughness: 0.12, clearcoat: 0.9 })
     );
     tardStone.position.set(tardX, tardY + 0.4, tardZ);
     tardStone.castShadow = true;
@@ -1226,135 +1173,11 @@
       completed: false
     });
 
-    // 東門基路伯與四面轉動發火焰的劍 (Cherubim & Whirling Flame Sword - Gen 3:24)
-    cherubimConstruct = new THREE.Group();
-    const fireSwordMat = new THREE.MeshStandardMaterial({
-      color: 0xff3838, emissive: 0xff2200, emissiveIntensity: 4.2, roughness: 0.1
-    });
-    const cRing1 = new THREE.Mesh(new THREE.TorusGeometry(4.6, 0.2, 16, 64), fireSwordMat);
-    const cRing2 = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.2, 16, 64), fireSwordMat);
-    cRing2.rotation.x = Math.PI / 2;
-    const cBlade = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 1), fireSwordMat);
-    cherubimConstruct.add(cRing1, cRing2, cBlade);
-    cherubimConstruct.position.set(60, getEdenElevation(60, 0) + 6.0, 0);
-    cherubimConstruct.visible = false;
-    scene.add(cherubimConstruct);
-
-    // ==========================================
-    // 9. 第一人稱物理移動與祭司職分互動
-    // ==========================================
-    const player = {
-      pos: new THREE.Vector3(0, getEdenElevation(0, 14) + 1.85, 14),
-      yaw: 0,
-      pitch: 0,
-      baseSpeed: 12.5,
-      bobTimer: 0
-    };
-    const keys = {};
-
-    const toggleSSAOBtn = document.getElementById('toggle-ssao');
-    function toggleSSAO() {
-      state.ssaoEnabled = !state.ssaoEnabled;
-      ssaoPass.enabled = state.ssaoEnabled;
-      toggleSSAOBtn.textContent = state.ssaoEnabled ? 'SSAO: 開啟 (Ultra)' : 'SSAO: 關閉 (High FPS)';
-    }
-    toggleSSAOBtn.addEventListener('click', toggleSSAO);
-
-    document.addEventListener('keydown', (e) => {
-      keys[e.code] = true;
-      if (e.code === 'KeyE' && state.isPlaying) handleInteract('E');
-      if (e.code === 'KeyR' && state.isPlaying) handleInteract('R');
-      if (e.code === 'KeyP') toggleSSAO();
-    });
-    document.addEventListener('keyup', (e) => keys[e.code] = false);
-
-    const startBtn = document.getElementById('start-btn');
-    const overlay = document.getElementById('overlay');
-
-    startBtn.addEventListener('click', () => document.body.requestPointerLock());
-
-    document.addEventListener('pointerlockchange', () => {
-      if (document.pointerLockElement === document.body) {
-        state.isPlaying = true;
-        overlay.style.display = 'none';
-      } else {
-        state.isPlaying = false;
-        if (!state.isExiled) {
-          overlay.style.display = 'flex';
-          startBtn.textContent = '返回伊甸聖所';
-        }
-      }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!state.isPlaying) return;
-      const sens = 0.002;
-      player.yaw -= e.movementX * sens;
-      player.pitch -= e.movementY * sens;
-      player.pitch = Math.max(-Math.PI / 2.15, Math.min(Math.PI / 2.15, player.pitch));
-    });
-
-    function handleInteract(key) {
-      const target = state.currentTarget;
-      if (!target) return;
-
-      if (target.type === 'treeOfLife' && key === 'E') {
-        state.hayyim = 100;
-        bloomPass.strength = 1.45;
-        setTimeout(() => { if (!state.isExiled) bloomPass.strength = 0.65; }, 650);
-        updateLog('treeOfLife');
-        updateHUD();
-      }
-
-      if (target.type === 'treeOfKnowledge') {
-        if (key === 'E') {
-          updateLog('treeOfKnowledge');
-        } else if (key === 'R') {
-          triggerExile();
-        }
-      }
-
-      if (target.type === 'river' && key === 'E' && !target.completed) {
-        target.completed = true;
-        target.mesh.material.color.setHex(0xffd700);
-        target.mesh.material.emissive.setHex(0xffaa00);
-        target.mesh.material.emissiveIntensity = 3.0;
-        state.riversTended++;
-        state.tasksCompleted++;
-        updateLog(target.note);
-        updateHUD();
-      }
-
-      if (target.type === 'animal' && key === 'E' && !target.named) {
-        target.named = true;
-        target.name = `已命名：${target.hebName}`;
-        state.animalsNamed++;
-        state.tasksCompleted++;
-        updateLog('namingAnimal');
-        updateHUD();
-      }
-
-      if (target.type === 'tardemah' && key === 'E' && !target.completed) {
-        if (state.animalsNamed < 3) {
-          document.getElementById('ex-title').textContent = "【條件未滿足】創世記 2:20";
-          document.getElementById('ex-body').textContent = "請先為園中的 3 隻活物命名（經歷『只是那人沒有找到相配的幫助者』），再回到沉睡之石。";
-          return;
-        }
-        target.completed = true;
-        state.hasEzer = true;
-        state.tasksCompleted++;
-        spawnEzerCompanion();
-        document.getElementById('comp-text').textContent = "狀態：已與幫助者同工 (ʿēzer kənegdô / עֵזֶר כְּנֶגְדּוֹ)";
-        document.getElementById('comp-text').style.color = "#2ed573";
-        updateLog('tardemahEzer');
-        updateHUD();
-      }
-    }
-
-    function spawnEzerCompanion() {
+    function spawnEzerCompanion(x, z) {
+      if (ezerMesh) scene.remove(ezerMesh);
       const group = new THREE.Group();
       const robeMat = new THREE.MeshPhysicalMaterial({
-        color: 0xffeaa7, emissive: 0xd4af37, emissiveIntensity: 0.4, roughness: 0.18, clearcoat: 1.0
+        color: 0xffeaa7, emissive: 0xd4af37, emissiveIntensity: 0.35, roughness: 0.2, clearcoat: 1.0
       });
       const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.38, 1.15, 16, 24), robeMat);
       torso.position.y = 1.05;
@@ -1365,62 +1188,384 @@
       crown.position.y = 2.35;
       group.add(torso, head, crown);
 
-      group.position.set(tardX + 2.2, tardY, tardZ);
+      const by = getEdenElevation(x, z);
+      group.position.set(x, by, z);
       scene.add(group);
       ezerMesh = group;
+      state.hasEzer = true;
     }
 
-    function triggerExile() {
-      state.isExiled = true;
-      updateLog('exile');
+    // ==========================================
+    // 9. 第二幕場景建構：伊甸東邊放逐曠野 (Act II: Exile East of Eden, Gen 3:17-24)
+    // ==========================================
+    function buildExileEastScene() {
+      exileWorldGroup = new THREE.Group();
 
-      player.pos.set(76, getEdenElevation(76, 0) + 1.85, 0);
-      player.yaw = Math.PI / 2;
+      // A. 東門基路伯與四面轉動發火焰的劍 (Cherubim & Whirling Flame Sword at x = 62, z = 0)
+      cherubimConstruct = new THREE.Group();
+      const fireMat = new THREE.MeshStandardMaterial({
+        color: 0xff4757, emissive: 0xff2200, emissiveIntensity: 4.5, roughness: 0.1
+      });
+      const cherubWingMat = new THREE.MeshStandardMaterial({
+        color: 0xd4af37, emissive: 0x883300, emissiveIntensity: 1.2, metalness: 0.9, roughness: 0.2
+      });
 
-      skyUniforms['turbidity'].value = 19;
-      skyUniforms['rayleigh'].value = 3.8;
-      updateAtmosphere(1.5, 90);
-      scene.fog.color.setHex(0x280d0d);
-      cherubimConstruct.visible = true;
-      bloomPass.strength = 1.45;
-      lensPass.uniforms.uChromatic.value = 0.0055;
+      // 多輪轉動火焰環與十字火焰巨劍
+      const ringA = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.22, 16, 64), fireMat);
+      const ringB = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.18, 16, 64), fireMat);
+      ringB.rotation.x = Math.PI / 2;
+      const swordBlade = new THREE.Mesh(new THREE.ConeGeometry(0.85, 11.0, 8), fireMat);
+      const swordHilt = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.45, 0.45), cherubWingMat);
+      swordHilt.position.y = -2.2;
 
-      document.exitPointerLock();
-      overlay.style.display = 'flex';
-      document.getElementById('modal-content').innerHTML = `
-        <h2 style="color:#ff4757;">גֵּרַשׁ אֶת־הָאָדָם | 放逐出伊甸聖所 (創世記 3:22–24)</h2>
-        <p>
-          你伸手摘取了「分辨善惡樹」的果子，選擇自行定義善惡的道德標準，背離了聖所祭司的順服之約。
-        </p>
-        <p>
-          <strong>經文應驗（Gen 3:24）：</strong><br>
-          「於是把他趕出去了；又在伊甸園的東邊（<i>miqqedem</i>），安設基路伯和四面轉動發火焰的劍，要把守生命樹的道路。」<br>
-          失去生命樹的持續更新後，人必須在園外的地土（<i>ʾădāmâ</i>）上汗流滿面才得糊口，直到歸回塵土。
-        </p>
-        <button class="primary-btn" onclick="location.reload()">重新開始聖所試煉</button>
-      `;
+      // 兩尊鎮守東門的高大基路伯聖像 (Two Cherubim Guardians)
+      [-7.5, 7.5].forEach(zSide => {
+        const statue = new THREE.Group();
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.3, 6.5, 16), cherubWingMat);
+        pillar.position.y = 3.25;
+        const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 5.5, 3.8), cherubWingMat);
+        wingL.position.set(0, 5.5, 1.8);
+        wingL.rotation.x = 0.35;
+        const wingR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 5.5, 3.8), cherubWingMat);
+        wingR.position.set(0, 5.5, -1.8);
+        wingR.rotation.x = -0.35;
+        statue.add(pillar, wingL, wingR);
+        statue.position.set(0, -4.5, zSide);
+        cherubimConstruct.add(statue);
+      });
+
+      const gateLight = new THREE.PointLight(0xff3300, 12.0, 45, 1.5);
+      cherubimConstruct.add(ringA, ringB, swordBlade, swordHilt, gateLight);
+
+      const gateY = getEdenElevation(62, 0);
+      cherubimConstruct.position.set(62, gateY + 6.0, 0);
+      exileWorldGroup.add(cherubimConstruct);
+
+      exileInteractables.push({
+        type: 'exileGate',
+        name: '伊甸東門：基路伯與四面轉動發火焰的劍 (Gen 3:24)',
+        note: 'exileGate',
+        mesh: swordBlade,
+        position: new THREE.Vector3(62, gateY + 2.0, 0)
+      });
+
+      // B. 3 處受咒詛地土上的「荊棘與蒺藜」(Thorns & Thistles - Gen 3:17-19)
+      const thornCoords = [
+        { x: 75, z: -9, label: "荊棘與蒺藜叢 I (Qôṣ wədardar / קוֹץ וְדַרְדַּר)" },
+        { x: 83, z: 8,  label: "荊棘與蒺藜叢 II (汗流滿面耕種之土)" },
+        { x: 72, z: 13, label: "荊棘與蒺藜叢 III (受咒詛的地土 ʾĂdāmâ)" }
+      ];
+
+      const thornMat = new THREE.MeshStandardMaterial({
+        color: 0x3d261c, emissive: 0x220804, roughness: 0.75, normalMap: barkPBR.normalMap
+      });
+
+      thornCoords.forEach((tc) => {
+        const thornGroup = new THREE.Group();
+        const ty = getEdenElevation(tc.x, tc.z);
+        thornGroup.position.set(tc.x, ty, tc.z);
+
+        for (let k = 0; k < 14; k++) {
+          const spike = new THREE.Mesh(new THREE.ConeGeometry(0.22, 2.4 + Math.random() * 1.2, 6), thornMat);
+          spike.position.set((Math.random() - 0.5) * 2.5, 0.9, (Math.random() - 0.5) * 2.5);
+          spike.rotation.set((Math.random() - 0.5) * 0.9, Math.random() * Math.PI, (Math.random() - 0.5) * 0.9);
+          spike.castShadow = true;
+          thornGroup.add(spike);
+        }
+        exileWorldGroup.add(thornGroup);
+
+        exileInteractables.push({
+          type: 'thorns',
+          name: tc.label,
+          note: 'cursedGround',
+          mesh: thornGroup,
+          position: new THREE.Vector3(tc.x, ty + 1.2, tc.z),
+          cleared: false
+        });
+      });
+
+      // C. 耶和華神為人所造的「皮衣祭壇」(Garments of Skin / כָּתְנוֹת עוֹר - Gen 3:21)
+      const altarX = 76, altarZ = 2;
+      const altarY = getEdenElevation(altarX, altarZ);
+      const skinAltarGroup = new THREE.Group();
+      skinAltarGroup.position.set(altarX, altarY, altarZ);
+
+      const stoneBase = new THREE.Mesh(
+        new THREE.BoxGeometry(2.4, 1.1, 1.6),
+        new THREE.MeshStandardMaterial({ color: 0x57514a, normalMap: groundPBR.normalMap, roughness: 0.85 })
+      );
+      stoneBase.position.y = 0.55;
+      stoneBase.castShadow = true;
+
+      // 發出溫暖保護光芒的皮衣卷軸/斗篷
+      const garmentMat = new THREE.MeshStandardMaterial({
+        color: 0xd49b54, emissive: 0xaa6611, emissiveIntensity: 0.9, roughness: 0.5, normalMap: groundPBR.normalMap
+      });
+      const garmentMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.75, 0.45, 20), garmentMat);
+      garmentMesh.position.y = 1.3;
+      const warmLight = new THREE.PointLight(0xffaa44, 4.0, 14);
+      warmLight.position.y = 2.2;
+
+      skinAltarGroup.add(stoneBase, garmentMesh, warmLight);
+      exileWorldGroup.add(skinAltarGroup);
+
+      exileInteractables.push({
+        type: 'garmentAltar',
+        name: '恩典石壇：耶和華神所造的皮衣 (Kotnot ʿOr / כָּתְנוֹת עוֹר - 創 3:21)',
+        note: 'garmentOfSkin',
+        mesh: garmentMesh,
+        position: new THREE.Vector3(altarX, altarY + 1.3, altarZ),
+        claimed: false
+      });
+
+      exileWorldGroup.visible = false;
+      scene.add(exileWorldGroup);
+    }
+
+    buildExileEastScene();
+
+    // ==========================================
+    // 10. 違約過場動畫與進入「放逐第二幕」狀態機
+    // ==========================================
+    const player = {
+      pos: new THREE.Vector3(0, getEdenElevation(0, 14) + 1.85, 14),
+      yaw: 0,
+      pitch: 0,
+      baseSpeed: 12.5,
+      bobTimer: 0
+    };
+    const keys = {};
+
+    function triggerExileSequence() {
+      if (state.isExiled || state.isCutscene) return;
+      state.isCutscene = true;
+
+      // 1. 啟動電影黑邊與字幕橫幅 (Gen 3:6-8, 22-24)
+      document.body.classList.add('cutscene-mode');
+      document.body.classList.add('exile-theme');
+      const banner = document.getElementById('cutscene-banner');
+      banner.style.opacity = '1';
+
+      // 2. 鏡頭光學震盪與大氣瞬間轉為審判暗紅血色
+      lensPass.uniforms.uChromatic.value = 0.014;
+      bloomPass.strength = 1.8;
+      shekinahLight.intensity = 0.3;
+      godRayCones.forEach(c => c.visible = false);
+
+      skyUniforms['turbidity'].value = 19.5;
+      skyUniforms['rayleigh'].value = 3.9;
+      updateAtmosphere(1.2, 88);
+      scene.fog.color.setHex(0x260d0d);
+      scene.fog.density = 0.0085;
+      mistMat.color.setHex(0xff5252);
+
+      // 3. 3.8 秒後完成放逐傳送，正式開啟「第二幕：東門曠野可遊玩場景」
+      setTimeout(() => {
+        banner.style.opacity = '0';
+        document.body.classList.remove('cutscene-mode');
+        lensPass.uniforms.uChromatic.value = 0.0038;
+        bloomPass.strength = 1.15;
+
+        state.isExiled = true;
+        state.isCutscene = false;
+        exileWorldGroup.visible = true;
+
+        // 將玩家傳送至伊甸園東門外曠野 (x = 70, z = 0)，面向西方被基路伯封鎖的東門
+        player.pos.set(70, getEdenElevation(70, 0) + 1.85, 0);
+        player.yaw = Math.PI / 2;
+        player.pitch = 0.08;
+
+        // 確保伴侶一同出現在園外曠野，等待被命名為「夏娃 (Ḥawwâ)」(Gen 3:20)
+        spawnEzerCompanion(72.5, -3.5);
+        exileInteractables.push({
+          type: 'nameHawwah',
+          name: '一同被放逐的妻子 — 起名叫「夏娃」(Ḥawwâ / חַוָּה 眾生之母 - 創 3:20)',
+          note: 'namingHawwah',
+          mesh: ezerMesh,
+          position: new THREE.Vector3(72.5, getEdenElevation(72.5, -3.5) + 1.5, -3.5),
+          named: false
+        });
+
+        document.getElementById('act-header').textContent = "ACT II: מִקֶּדֶם EAST OF EDEN (EXILE)";
+        document.getElementById('comp-text').textContent = "衣著狀態：無花果樹葉裙 (創 3:7 - 脆弱失榮耀，請尋求神造的皮衣)";
+        document.getElementById('comp-text').style.color = "#ff6b81";
+        document.getElementById('label-shamar').textContent = "בְּזֵעַת אַפֶּיךָ 園外勞苦與恩典進度 (Exile Tasks)";
+
+        updateLog('exileGate');
+        updateHUD();
+      }, 3800);
+    }
+
+    // ==========================================
+    // 11. 玩家輸入與第一/第二幕互動邏輯
+    // ==========================================
+    const toggleSSAOBtn = document.getElementById('toggle-ssao');
+    function toggleSSAO() {
+      state.ssaoEnabled = !state.ssaoEnabled;
+      ssaoPass.enabled = state.ssaoEnabled;
+      toggleSSAOBtn.textContent = state.ssaoEnabled ? 'SSAO: 開啟 (Ultra)' : 'SSAO: 關閉 (High FPS)';
+    }
+    toggleSSAOBtn.addEventListener('click', toggleSSAO);
+
+    document.getElementById('quick-exile-btn').addEventListener('click', () => {
+      document.body.requestPointerLock();
+      setTimeout(() => triggerExileSequence(), 150);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      keys[e.code] = true;
+      if (e.code === 'KeyE' && state.isPlaying && !state.isCutscene) handleInteract('E');
+      if (e.code === 'KeyR' && state.isPlaying && !state.isCutscene) handleInteract('R');
+      if (e.code === 'KeyP') toggleSSAO();
+    });
+    document.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    const startBtn = document.getElementById('start-btn');
+    const overlay = document.getElementById('overlay');
+    startBtn.addEventListener('click', () => document.body.requestPointerLock());
+
+    document.addEventListener('pointerlockchange', () => {
+      if (document.pointerLockElement === document.body) {
+        state.isPlaying = true;
+        overlay.style.display = 'none';
+      } else {
+        state.isPlaying = false;
+        if (!state.isCutscene) {
+          overlay.style.display = 'flex';
+          startBtn.textContent = state.isExiled ? '返回伊甸東邊曠野 (Act II)' : '返回伊甸聖所 (Act I)';
+        }
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!state.isPlaying || state.isCutscene) return;
+      const sens = 0.002;
+      player.yaw -= e.movementX * sens;
+      player.pitch -= e.movementY * sens;
+      player.pitch = Math.max(-Math.PI / 2.15, Math.min(Math.PI / 2.15, player.pitch));
+    });
+
+    function handleInteract(key) {
+      const target = state.currentTarget;
+      if (!target) return;
+
+      // --- 第一幕：伊甸園內互動 ---
+      if (!state.isExiled) {
+        if (target.type === 'treeOfLife' && key === 'E') {
+          state.hayyim = 100;
+          bloomPass.strength = 1.45;
+          setTimeout(() => { if (!state.isExiled) bloomPass.strength = 0.65; }, 650);
+          updateLog('treeOfLife');
+          updateHUD();
+        }
+        if (target.type === 'treeOfKnowledge') {
+          if (key === 'E') updateLog('treeOfKnowledge');
+          else if (key === 'R') triggerExileSequence();
+        }
+        if (target.type === 'river' && key === 'E' && !target.completed) {
+          target.completed = true;
+          target.mesh.material.color.setHex(0xffd700);
+          target.mesh.material.emissive.setHex(0xffaa00);
+          target.mesh.material.emissiveIntensity = 3.0;
+          state.riversTended++;
+          state.tasksCompleted++;
+          updateLog(target.note);
+          updateHUD();
+        }
+        if (target.type === 'animal' && key === 'E' && !target.named) {
+          target.named = true;
+          target.name = `已命名：${target.hebName}`;
+          state.animalsNamed++;
+          state.tasksCompleted++;
+          updateLog('namingAnimal');
+          updateHUD();
+        }
+        if (target.type === 'tardemah' && key === 'E' && !target.completed) {
+          if (state.animalsNamed < 3) {
+            document.getElementById('ex-title').textContent = "【條件未滿足】創世記 2:20";
+            document.getElementById('ex-body').textContent = "請先為園中的 3 隻活物命名（經歷『只是那人沒有找到相配的幫助者』），再回到沉睡之石。";
+            return;
+          }
+          target.completed = true;
+          state.tasksCompleted++;
+          spawnEzerCompanion(tardX + 2.2, tardZ);
+          document.getElementById('comp-text').textContent = "狀態：已與幫助者同工 (ʿēzer kənegdô / עֵזֶר כְּנֶגְדּוֹ)";
+          document.getElementById('comp-text').style.color = "#2ed573";
+          updateLog('tardemahEzer');
+          updateHUD();
+        }
+      }
+      // --- 第二幕：東門放逐曠野互動 ---
+      else {
+        if (target.type === 'exileGate' && key === 'E') {
+          updateLog('exileGate');
+        }
+        // 1. 汗流滿面拔除荊棘與耕種地土 (Gen 3:17-19)
+        if (target.type === 'thorns' && key === 'E' && !target.cleared) {
+          target.cleared = true;
+          target.mesh.scale.set(1, 0.15, 1);
+          // 在原處長出大麥/麥穗象徵汗流滿面得糊口 (Gen 3:18-19)
+          const wheatMat = new THREE.MeshStandardMaterial({ color: 0xe1b12c, emissive: 0x443300 });
+          for (let w = 0; w < 8; w++) {
+            const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.4, 8), wheatMat);
+            stalk.position.set((Math.random() - 0.5) * 1.6, 4.5, (Math.random() - 0.5) * 1.6);
+            target.mesh.add(stalk);
+          }
+          target.name = "已開墾的田地：汗流滿面才得糊口 (לֶחֶם / Leḥem)";
+          state.hayyim = Math.min(100, state.hayyim + 15);
+          state.exileTasksCompleted++;
+          updateLog('cursedGround');
+          updateHUD();
+        }
+        // 2. 領受耶和華神所造的皮衣 (Gen 3:21)
+        if (target.type === 'garmentAltar' && key === 'E' && !target.claimed) {
+          target.claimed = true;
+          target.mesh.visible = false;
+          state.hasGarmentOfSkin = true;
+          state.hayyim = 100;
+          state.exileTasksCompleted++;
+          document.getElementById('comp-text').textContent = "衣著狀態：已穿戴神所造的皮衣 (כָּתְנוֹת עוֹר / Kotnot ʿOr - 創 3:21 恩典遮蓋)";
+          document.getElementById('comp-text').style.color = "#f5d17e";
+          updateLog('garmentOfSkin');
+          updateHUD();
+        }
+        // 3. 命名妻子為「夏娃」(Gen 3:20)
+        if (target.type === 'nameHawwah' && key === 'E' && !target.named) {
+          target.named = true;
+          target.name = "夏娃 (חַוָּה / Ḥawwâ — 眾生之母)";
+          state.exileTasksCompleted++;
+          updateLog('namingHawwah');
+          updateHUD();
+        }
+      }
     }
 
     function updateHUD() {
       document.getElementById('txt-hayyim').textContent = `${Math.round(state.hayyim)}%`;
       document.getElementById('fill-hayyim').style.width = `${state.hayyim}%`;
 
-      document.getElementById('txt-shamar').textContent = `${state.tasksCompleted} / ${state.totalTasks}`;
-      document.getElementById('fill-shamar').style.width = `${(state.tasksCompleted / state.totalTasks) * 100}%`;
+      if (!state.isExiled) {
+        document.getElementById('txt-shamar').textContent = `${state.tasksCompleted} / ${state.totalTasks}`;
+        document.getElementById('fill-shamar').style.width = `${(state.tasksCompleted / state.totalTasks) * 100}%`;
 
-      const dist = Math.sqrt(player.pos.x ** 2 + player.pos.z ** 2);
-      const locEl = document.getElementById('loc-text');
-      if (dist < 17.8) {
-        locEl.textContent = "當前區域：中央至聖所高台 (Holy of Holies Summit - 生命樹與活水源頭)";
-      } else if (dist < 60) {
-        locEl.textContent = "當前區域：伊甸園森林台地 (Garden Sanctuary - 四道河流域)";
+        const dist = Math.sqrt(player.pos.x ** 2 + player.pos.z ** 2);
+        const locEl = document.getElementById('loc-text');
+        if (dist < 17.8) {
+          locEl.textContent = "當前區域：中央至聖所高台 (Holy of Holies Summit - 生命樹與活水源頭)";
+        } else if (dist < 60) {
+          locEl.textContent = "當前區域：伊甸園森林台地 (Garden Sanctuary - 四道河流域)";
+        } else {
+          locEl.textContent = "當前區域：伊甸邊界 (Boundary of Eden)";
+        }
       } else {
-        locEl.textContent = "當前區域：園外地土曠野 (Outside Eden - ʾădāmâ)";
+        document.getElementById('txt-shamar').textContent = `${state.exileTasksCompleted} / ${state.exileTotalTasks}`;
+        document.getElementById('fill-shamar').style.width = `${(state.exileTasksCompleted / state.exileTotalTasks) * 100}%`;
+        document.getElementById('loc-text').textContent = "當前區域：伊甸園東邊曠野 (Miqqedem / מִקֶּדֶם - 受咒詛的地土 ʾĂdāmâ)";
       }
     }
 
     // ==========================================
-    // 10. 主渲染與物理迴圈 (Main Loop)
+    // 12. 主渲染與物理碰撞迴圈 (Main Loop)
     // ==========================================
     let prevTime = performance.now();
 
@@ -1437,7 +1582,6 @@
         if (mat.userData.shader) mat.userData.shader.uniforms.uTime.value = elapsed;
       });
 
-      // 活物呼吸與頭部轉動動畫
       faunaList.forEach(f => {
         f.headPivot.rotation.y = Math.sin(elapsed * 1.1 + f.phase) * 0.32;
         f.headPivot.rotation.x = Math.cos(elapsed * 0.8 + f.phase) * 0.08;
@@ -1453,29 +1597,32 @@
         }
       });
 
-      // 上騰水霧粒子更新
+      // 霧氣與灰燼粒子運動
       const mArr = mistSystem.geometry.attributes.position.array;
       for (let i = 1; i < mArr.length; i += 3) {
-        mArr[i] += dt * 0.42;
-        if (mArr[i] > 19) mArr[i] = 3.8;
+        mArr[i] += dt * (state.isExiled ? -0.65 : 0.42); // 放逐後轉為飄落的塵土與灰燼 (Dust you are, to dust you will return)
+        if (!state.isExiled && mArr[i] > 19) mArr[i] = 3.8;
+        if (state.isExiled && mArr[i] < 1.0) mArr[i] = 18.0;
       }
       mistSystem.geometry.attributes.position.needsUpdate = true;
 
-      if (cherubimConstruct && cherubimConstruct.visible) {
-        cherubimConstruct.children[0].rotation.x += dt * 3.8;
-        cherubimConstruct.children[0].rotation.y += dt * 2.5;
-        cherubimConstruct.children[1].rotation.y -= dt * 4.2;
-        cherubimConstruct.children[2].rotation.z += dt * 5.5;
+      // 東門基路伯四面轉動發火焰的劍動態旋轉 (Gen 3:24)
+      if (cherubimConstruct && exileWorldGroup.visible) {
+        cherubimConstruct.children[0].rotation.x += dt * 4.2;
+        cherubimConstruct.children[0].rotation.y += dt * 2.8;
+        cherubimConstruct.children[1].rotation.y -= dt * 4.8;
+        cherubimConstruct.children[2].rotation.y += dt * 6.5;
       }
 
-      if (state.isPlaying && !state.isExiled) {
-        const drainRate = state.hasEzer ? 0.5 : 1.05;
-        state.hayyim = Math.max(0, state.hayyim - drainRate * dt);
-        if (state.hayyim <= 0) {
-          state.hayyim = 35;
-          player.pos.set(0, getEdenElevation(0, 0) + 1.85, 0);
-          updateLog('treeOfLife');
+      if (state.isPlaying && !state.isCutscene) {
+        // 生命消耗率：放逐後若未穿戴「皮衣」，受曠野嚴寒與勞苦影響消耗較快
+        let drainRate = 1.0;
+        if (!state.isExiled) {
+          drainRate = state.hasEzer ? 0.45 : 0.95;
+        } else {
+          drainRate = state.hasGarmentOfSkin ? 0.35 : 1.45;
         }
+        state.hayyim = Math.max(10, state.hayyim - drainRate * dt);
 
         const forward = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)).normalize();
         const right = new THREE.Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw)).normalize();
@@ -1487,7 +1634,7 @@
         if (keys['KeyA']) moveDir.sub(right);
 
         const isMoving = moveDir.lengthSq() > 0;
-        const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? player.baseSpeed * 1.65 : player.baseSpeed;
+        const speed = (keys['ShiftLeft'] || keys['ShiftRight']) ? player.baseSpeed * 1.6 : player.baseSpeed;
 
         if (isMoving) {
           moveDir.normalize();
@@ -1497,11 +1644,23 @@
           player.bobTimer = 0;
         }
 
-        const maxR = 88;
-        const currR = Math.sqrt(player.pos.x ** 2 + player.pos.z ** 2);
-        if (currR > maxR) {
-          player.pos.x *= maxR / currR;
-          player.pos.z *= maxR / currR;
+        // 放逐後的物理屏障：基路伯與旋轉火焰劍封鎖東門，禁止玩家返回伊甸園內 (x < 64.5)
+        if (state.isExiled) {
+          if (player.pos.x < 64.5) {
+            player.pos.x = 64.8; // 被火焰劍震退
+            lensPass.uniforms.uChromatic.value = 0.012;
+            setTimeout(() => { lensPass.uniforms.uChromatic.value = 0.0038; }, 250);
+            updateLog('exileGate');
+          }
+          player.pos.x = Math.min(96, player.pos.x);
+          player.pos.z = Math.max(-28, Math.min(28, player.pos.z));
+        } else {
+          const maxR = 88;
+          const currR = Math.sqrt(player.pos.x ** 2 + player.pos.z ** 2);
+          if (currR > maxR) {
+            player.pos.x *= maxR / currR;
+            player.pos.z *= maxR / currR;
+          }
         }
 
         const groundY = getEdenElevation(player.pos.x, player.pos.z);
@@ -1513,14 +1672,19 @@
         camera.quaternion.setFromEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
 
         if (ezerMesh) {
-          const targetCompanion = new THREE.Vector3(player.pos.x - 2.6, 0, player.pos.z - 2.6);
+          const targetCompanion = new THREE.Vector3(player.pos.x + (state.isExiled ? 2.5 : -2.6), 0, player.pos.z - 2.6);
           targetCompanion.y = getEdenElevation(targetCompanion.x, targetCompanion.z);
-          ezerMesh.position.lerp(targetCompanion, dt * 3.2);
+          ezerMesh.position.lerp(targetCompanion, dt * 2.8);
+          // 同步更新夏娃互動座標
+          const hawwahObj = exileInteractables.find(x => x.type === 'nameHawwah');
+          if (hawwahObj) hawwahObj.position.copy(ezerMesh.position).add(new THREE.Vector3(0, 1.5, 0));
         }
 
+        // 根據第一幕或第二幕偵測可互動物件
+        const activeList = state.isExiled ? exileInteractables : interactables;
         let closest = null;
         let minDist = 7.8;
-        for (const item of interactables) {
+        for (const item of activeList) {
           const d = player.pos.distanceTo(item.position);
           if (d < minDist) {
             minDist = d;
@@ -1537,7 +1701,7 @@
           if (closest.type === 'treeOfLife') {
             promptBox.innerHTML = `${closest.name}<br><span class="k-badge">E</span> 領受生命樹果子更新生命 (Hayyim +100%)`;
           } else if (closest.type === 'treeOfKnowledge') {
-            promptBox.innerHTML = `${closest.name}<br><span class="k-badge">E</span> 敬畏順服神定秩序 | <span class="k-badge" style="background:#ff4757;color:#fff;">R</span> 摘取禁果 (自主定義善惡)`;
+            promptBox.innerHTML = `${closest.name}<br><span class="k-badge">E</span> 敬畏順服神定秩序 | <span class="k-badge" style="background:#ff4757;color:#fff;">R</span> 摘取禁果 (觸發違約與東門放逐場景)`;
           } else if (closest.type === 'river') {
             promptBox.innerHTML = closest.completed
               ? `${closest.name} (已完成看守)`
@@ -1550,6 +1714,20 @@
             promptBox.innerHTML = closest.completed
               ? `${closest.name} (已建造幫助者)`
               : `${closest.name}<br><span class="k-badge">E</span> 進入沉睡 (Tardēmâ) 建造幫助者 (需先命名 3 隻活物)`;
+          } else if (closest.type === 'exileGate') {
+            promptBox.innerHTML = `${closest.name}<br><span class="k-badge" style="background:#ff4757;color:#fff;">E</span> 查看東門封鎖諭令 (通往生命樹的道路已被把守)`;
+          } else if (closest.type === 'thorns') {
+            promptBox.innerHTML = closest.cleared
+              ? `${closest.name}`
+              : `${closest.name}<br><span class="k-badge">E</span> 汗流滿面拔除荊棘並耕種地土 (創 3:17–19)`;
+          } else if (closest.type === 'garmentAltar') {
+            promptBox.innerHTML = closest.claimed
+              ? `已穿戴耶和華所造的皮衣 (כָּתְנוֹת עוֹר)`
+              : `${closest.name}<br><span class="k-badge">E</span> 領受並穿戴神所造的皮衣取代無花果葉裙 (創 3:21)`;
+          } else if (closest.type === 'nameHawwah') {
+            promptBox.innerHTML = closest.named
+              ? `${closest.name}`
+              : `${closest.name}<br><span class="k-badge">E</span> 給妻子起名叫「夏娃」(Ḥawwâ — 眾生之母, 創 3:20)`;
           }
         } else {
           promptBox.style.display = 'none';
